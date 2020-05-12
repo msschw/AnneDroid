@@ -9,6 +9,7 @@ TOKEN = os.getenv('ANNEDROID_TOKEN')
 NAMESPACE = os.getenv('ANNEDROID_NAMESPACE')
 KEYWORD_GOOGLE = os.getenv('ANNEDROID_KEYWORD_GOOGLE')
 KEYWORD_WIKIPEDIA = os.getenv('ANNEDROID_KEYWORD_WIKIPEDIA')
+KEYWORD_YOUTUBE = os.getenv('ANNEDROID_KEYWORD_YOUTUBE')
 KEYWORD_HELP = os.getenv('ANNEDROID_KEYWORD_HELP')
 ERROR_MESSAGE_COMMAND = "you are the weakest link"
 ERROR_MESSAGE = "i am the weakest link, goodbye!"
@@ -36,6 +37,7 @@ async def on_message(message):
                     reply += KEYWORD_HELP + ":\n\n"
                     reply += KEYWORD_GOOGLE + " " + "<query>" "\t:\t" + "perform google search"
                     reply += KEYWORD_WIKIPEDIA + " " + "<query>" "\t:\t" + "perform wikipedia search"
+                    reply += KEYWORD_YOUTUBE + " " + "<query>" "\t:\t" + "perform youtube search"
                 else:
                     raise CommandError("invalid command: " + message.content)
 
@@ -67,7 +69,19 @@ async def on_message(message):
                         raise ie
                     except:
                         raise
+                # KEYWORD_YOUTUBE
+                if(tokens[1].lower() == KEYWORD_YOUTUBE):
+                    try:
+                        from youtube_search import YoutubeSearch
+                        searchresult = YoutubeSearch(search_terms=" ".join(tokens[2:]), max_results=1)
+                        #just lookup the first one
+                        if(len(searchresult.videos) > 0):
+                            reply += searchresult.videos[0]["title"] + ": " + "https://youtube.com" + searchresult.videos[0]["link"]
 
+                    except ImportError:
+                        raise ie
+                    except:
+                        raise
                 else:
                     raise CommandError("unknown command: " + message.content)
             else:
