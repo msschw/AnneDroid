@@ -8,6 +8,7 @@ load_dotenv()
 TOKEN = os.getenv('ANNEDROID_TOKEN')
 NAMESPACE = os.getenv('ANNEDROID_NAMESPACE')
 KEYWORD_GOOGLE = os.getenv('ANNEDROID_KEYWORD_GOOGLE')
+KEYWORD_MOSCHUSGOOGLE = os.getenv('ANNEDROID_KEYWORD_MOSCHUSGOOGLE')
 KEYWORD_WIKIPEDIA = os.getenv('ANNEDROID_KEYWORD_WIKIPEDIA')
 KEYWORD_YOUTUBE = os.getenv('ANNEDROID_KEYWORD_YOUTUBE')
 KEYWORD_HELP = os.getenv('ANNEDROID_KEYWORD_HELP')
@@ -23,10 +24,6 @@ async def on_message(message):
         return
 
     try:
-        # name calling
-        if(message.author.name == 'Eniosan'):
-            raise CommandError(message.author.name)
-
         # command handling
         if(message.content.startswith(NAMESPACE)):
             tokens = message.content.split(' ')
@@ -55,8 +52,20 @@ async def on_message(message):
                         raise
                     except:
                         raise
+                # KEYWORD_MOSCHUSGOOGLE
+                elif(tokens[1].lower() == KEYWORD_MOSCHUSGOOGLE):
+                    try:
+                        reply += "!google " + " ".join(tokens[2:])
+                    except ImportError as ie:
+                        raise ie
+                    except StopIteration:
+                        raise CommandError("insufficient results")
+                        raise
+                    except:
+                        raise
+
                 # KEYWORD_WIKIPEDIA
-                if(tokens[1].lower() == KEYWORD_WIKIPEDIA):
+                elif(tokens[1].lower() == KEYWORD_WIKIPEDIA):
                     try:
                         from wikipedia import search,page
                         searchresult = search(query=" ".join(tokens[2:]))
@@ -70,7 +79,7 @@ async def on_message(message):
                     except:
                         raise
                 # KEYWORD_YOUTUBE
-                if(tokens[1].lower() == KEYWORD_YOUTUBE):
+                elif(tokens[1].lower() == KEYWORD_YOUTUBE):
                     try:
                         from youtube_search import YoutubeSearch
                         searchresult = YoutubeSearch(search_terms=" ".join(tokens[2:]), max_results=1)
