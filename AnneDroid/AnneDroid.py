@@ -81,6 +81,7 @@ async def on_message(message):
         #send the error
         await message.channel.send(ERROR_MESSAGE_COMMAND + ", " + message.author.name +"!" + "\t" + str(type(e)) + ": " + str(e))
     except Exception as e:
+        #send internal error
         await message.channel.send(ERROR_MESSAGE + "\t" + str(type(e)) + ": " + str(e))
 
 client.run(TOKEN)
