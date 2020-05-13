@@ -23,6 +23,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AnneDroid.py" />
+    <Compile Include="Command.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Errors.py">
       <SubType>Code</SubType>
     </Compile>
