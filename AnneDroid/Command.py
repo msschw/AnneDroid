@@ -1,13 +1,15 @@
 from Errors import CommandError
 from enum import Enum
 
+
 class ActionType(Enum):
-    none = 0 
+    none = 0
     oneshot = 1
     restart = 2
     start = 3
     stop = 4
     toggle = 5
+
 
 class CommandType(Enum):
     google = 1
@@ -17,23 +19,23 @@ class CommandType(Enum):
     wiki = 4
     yt = 5
 
+
 class Command(object):
     """command abstraction"""
 
-    KEYWORD_ACTIVE="!ad"
+    KEYWORD_ACTIVE = "!ad"
 
-    KEYWORD_COMMAND_GOOGLE="google"
-    KEYWORD_COMMAND_HELP="help"
-    KEYWORD_COMMAND_MOSCHUSGOOGLE="moogle"
-    KEYWORD_COMMAND_WIKIPEDIA="wiki"
-    KEYWORD_COMMAND_YOUTUBE="yt"
+    KEYWORD_COMMAND_GOOGLE = "google"
+    KEYWORD_COMMAND_HELP = "help"
+    KEYWORD_COMMAND_MOSCHUSGOOGLE = "moogle"
+    KEYWORD_COMMAND_WIKIPEDIA = "wiki"
+    KEYWORD_COMMAND_YOUTUBE = "yt"
 
-
-    KEYWORD_ACTION_ONESHOT="oneshot"
-    KEYWORD_ACTION_RESTART="restart"
-    KEYWORD_ACTION_START="start"
-    KEYWORD_ACTION_STOP="stop"
-    KEYWORD_ACTION_TOGGLE="toggle"
+    KEYWORD_ACTION_ONESHOT = "oneshot"
+    KEYWORD_ACTION_RESTART = "restart"
+    KEYWORD_ACTION_START = "start"
+    KEYWORD_ACTION_STOP = "stop"
+    KEYWORD_ACTION_TOGGLE = "toggle"
 
     ActionAssignment = {
         KEYWORD_ACTION_ONESHOT: ActionType.oneshot,
@@ -78,7 +80,7 @@ class Command(object):
                 self.Command = self.CommandAssignment[tokens[1]]
             else:
                 raise CommandError("invalid command: " + tokens[1])
-        
+
         # try parse second token
         firstQueryTokenPosition = 1
         if len(tokens) > 2:
@@ -116,40 +118,35 @@ class Command(object):
             except StopIteration:
                 raise CommandError("insufficient results")
                 raise
-            except:
-                raise
 
         elif (self.Command == CommandType.moogle) and (self.Query != ""):
             return "!google " + self.Query
 
         elif (self.Command == CommandType.wiki) and (self.Query != ""):
             try:
-                from wikipedia import search,page
+                from wikipedia import search, page
                 searchresult = search(query=self.Query)
-                #just lookup the first one
-                if(len(searchresult) > 0):
+                # just lookup the first one
+                if len(searchresult) > 0:
                     wikipage = page(searchresult[0])
                     return wikipage.title + ": " + wikipage.url
                 else:
                     raise CommandError("insufficient results")
-            except ImportError:
+            except ImportError as ie:
                 raise ie
-            except:
-                raise
 
-        elif((self.Command == CommandType.yt) and (self.Query != "")):
+        elif (self.Command == CommandType.yt) and (self.Query != ""):
             try:
                 from youtube_search import YoutubeSearch
                 searchresult = YoutubeSearch(search_terms=self.Query, max_results=1)
-                #just lookup the first one
-                if(len(searchresult.videos) > 0):
-                    return searchresult.videos[0]["title"] + ": " + "https://youtube.com" + searchresult.videos[0]["link"]
+                # just lookup the first one
+                if len(searchresult.videos) > 0:
+                    return searchresult.videos[0]["title"] + ": " + "https://youtube.com" + searchresult.videos[0][
+                        "link"]
                 else:
                     raise CommandError("insufficient results")
-            except ImportError:
+            except ImportError as ie:
                 raise ie
-            except:
-                raise
 
         else:
             raise CommandError("invalid command")
