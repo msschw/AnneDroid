@@ -59,10 +59,10 @@ class Command(object):
         self.Parse(input)
 
     def Parse(self, input):
-        if(not isinstance(input, str)):
+        if not isinstance(input, str):
             raise CommandError
 
-        if(not input.startswith(self.KEYWORD_ACTIVE)):
+        if not input.startswith(self.KEYWORD_ACTIVE):
             self.Action = ActionType.none
             return
 
@@ -70,20 +70,19 @@ class Command(object):
 
         # default assignment
         self.Command = CommandType.help
-        self.Action = ActionType.none
-
+        self.Action = ActionType.oneshot
 
         # parse first token
-        if(len(tokens) > 1):
-            if(tokens[1] in self.CommandAssignment):
+        if len(tokens) > 1:
+            if tokens[1] in self.CommandAssignment:
                 self.Command = self.CommandAssignment[tokens[1]]
             else:
                 raise CommandError("invalid command: " + tokens[1])
         
         # try parse second token
         firstQueryTokenPosition = 1
-        if(len(tokens) > 2):
-            if(tokens[2] in self.ActionAssignment):
+        if len(tokens) > 2:
+            if tokens[2] in self.ActionAssignment:
                 # action is specified
                 self.Action = self.ActionAssignment[tokens[2]]
                 firstQueryTokenPosition = 3
@@ -93,22 +92,21 @@ class Command(object):
                 firstQueryTokenPosition = 2
 
         # try parse query
-        if(len(tokens) > firstQueryTokenPosition):
+        if len(tokens) > firstQueryTokenPosition:
             self.Query = " ".join(tokens[firstQueryTokenPosition:])
 
-
     def Execute(self):
-        if(self.Action == ActionType.none):
+        if self.Action == ActionType.none:
             return ""
 
-        if(self.Command == CommandType.help):
-            reply = self.KEYWORD_HELP + ":\n\n"
-            reply += self.KEYWORD_GOOGLE + " " + "<query>" "\t:\t" + "perform google search"
-            reply += self.KEYWORD_WIKIPEDIA + " " + "<query>" "\t:\t" + "perform wikipedia search"
-            reply += self.KEYWORD_YOUTUBE + " " + "<query>" "\t:\t" + "perform youtube search"
+        if self.Command == CommandType.help:
+            reply = self.KEYWORD_COMMAND_HELP + ":\n\n"
+            reply += self.KEYWORD_COMMAND_GOOGLE + " " + "<query>" "\t:\t" + "perform google search\n"
+            reply += self.KEYWORD_COMMAND_WIKIPEDIA + " " + "<query>" "\t:\t" + "perform wikipedia search\n"
+            reply += self.KEYWORD_COMMAND_YOUTUBE + " " + "<query>" "\t:\t" + "perform youtube search\n"
             return reply
 
-        elif((self.Command == CommandType.google) and (self.Query != "")):
+        elif (self.Command == CommandType.google) and (self.Query != ""):
             try:
                 from googlesearch import search
                 searchresult = search(query=self.Query, start=0, stop=1)
@@ -121,10 +119,10 @@ class Command(object):
             except:
                 raise
 
-        elif((self.Command == CommandType.moogle) and (self.Query != "")):
+        elif (self.Command == CommandType.moogle) and (self.Query != ""):
             return "!google " + self.Query
 
-        elif((self.Command == CommandType.moogle) and (self.Query != "")):
+        elif (self.Command == CommandType.wiki) and (self.Query != ""):
             try:
                 from wikipedia import search,page
                 searchresult = search(query=self.Query)
@@ -139,7 +137,7 @@ class Command(object):
             except:
                 raise
 
-        elif((self.Command == CommandType.moogle) and (self.Query != "")):
+        elif((self.Command == CommandType.yt) and (self.Query != "")):
             try:
                 from youtube_search import YoutubeSearch
                 searchresult = YoutubeSearch(search_terms=self.Query, max_results=1)
