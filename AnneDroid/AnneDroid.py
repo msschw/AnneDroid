@@ -38,6 +38,9 @@ def main():
             # await message.channel.send(ERROR_MESSAGE + "\t" + str(type(e)) + ": " + str(e))
             # print instead
             print(ERROR_MESSAGE + "\t" + str(type(e)) + ": " + str(e))
+            # print trace
+            import traceback
+            print(traceback.format_exc())
             pass
 
     client.run(TOKEN)
