@@ -124,12 +124,16 @@ class Command(object):
 
         elif (self.Command == CommandType.wiki) and (self.Query != ""):
             try:
-                from wikipedia import search, page
+                from wikipedia import search, page, exceptions
                 searchresult = search(query=self.Query)
                 # just lookup the first one
                 if len(searchresult) > 0:
-                    wikipage = page(searchresult[0])
-                    return wikipage.title + ": " + wikipage.url
+                    try:
+                        wikipage = page(searchresult[0])
+                        return wikipage.title + ": " + wikipage.url
+                    except exceptions.DisambiguationError as de:
+                        wikipage = page(random.choice(de.options))
+                        return "(Amb.) " + wikipage.title + ": " + wikipage.url
                 else:
                     raise CommandError("insufficient results")
             except ImportError as ie:
