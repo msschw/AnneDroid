@@ -1,5 +1,5 @@
 import os
-
+import random
 import discord
 from dotenv import load_dotenv
 from Command import Command
@@ -47,7 +47,7 @@ def main():
             await set_idle_state()
 
     async def set_idle_state():
-        await client.change_presence(activity=None, status=discord.Status.online)
+        await client.change_presence(activity=discord.Game(name="with herself"), status=discord.Status.online)
 
     async def set_dnd_state(message):
         await client.change_presence(activity=discord.Activity(name=message), status=discord.Status.dnd)
