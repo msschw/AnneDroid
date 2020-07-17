@@ -32,7 +32,7 @@ def main():
 
         except CommandError as e:
             # send the error
-            await message.channel.send(
+            await message.author.send(
                 ERROR_MESSAGE_COMMAND + ", " + message.author.name + "!" + "\t" + str(type(e)) + ": " + str(e))
         except Exception as e:
             # do not send internal error
