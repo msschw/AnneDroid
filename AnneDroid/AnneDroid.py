@@ -1,6 +1,9 @@
 import os
 import random
+import datetime
 import discord
+import MessageStorage
+
 from dotenv import load_dotenv
 from Command import Command
 
@@ -12,6 +15,9 @@ def main():
     ERROR_MESSAGE_COMMAND = "you are the weakest link"
     ERROR_MESSAGE = "i am the weakest link, goodbye!"
 
+    MESSAGE_DATABASE = "messages.db"
+
+    mdb = MessageStorage.MessageStorage(MESSAGE_DATABASE)
     client = discord.Client()
 
     @client.event
@@ -20,6 +26,36 @@ def main():
         if message.author == client.user:
             return
 
+        # log message
+        mdbChannel =  message.guild.name + ":" + message.channel.name;
+        mdb.insert_message(MessageStorage.Message(message.author.name, message.content, mdbChannel, datetime.datetime.now().strftime(MessageStorage.Message.FORMAT)))
+
+        # check for stats
+        if message.content.startswith(Command.KEYWORD_ACTIVE):
+            tokens = message.content.split(' ')
+            if len(tokens) > 1:
+                if tokens[1] == "stats":
+                    replyMessage = ""
+
+                    channelMessages = mdb.select_messages_by_channel(mdbChannel)
+
+                    count = 0
+                    userWordCountDict = {}
+                    for m in channelMessages:
+                        count += 1
+                        if(m.Author in userWordCountDict.keys()):
+                            userWordCountDict[m.Author] += len(m.Message)
+                        else:
+                            userWordCountDict[m.Author] = len(m.Message)
+
+                    for userKey in userWordCountDict.keys():
+                        replyMessage += userKey + "\t:\t"+ str(userWordCountDict[userKey]) + "\n"
+
+                    if len(replyMessage) > 0:
+                        await message.channel.send(replyMessage)
+                    return
+
+        # parse commands
         try:
             if message.content.startswith(Command.KEYWORD_ACTIVE):
                 await set_dnd_state(message.author.name + "'s request")
