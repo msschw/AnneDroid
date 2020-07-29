@@ -146,7 +146,7 @@ class Command(object):
                 # just lookup the first one
                 if len(searchresult.videos) > 0:
                     return searchresult.videos[0]["title"] + ": " + "https://youtube.com" + searchresult.videos[0][
-                        "link"]
+                        "url_suffix"]
                 else:
                     raise CommandError("insufficient results")
             except ImportError as ie:
