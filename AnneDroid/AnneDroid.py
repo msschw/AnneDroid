@@ -46,6 +46,7 @@ def main():
 
                     if len(replyMessage) > 0:
                         await message.channel.send(replyMessage)
+                        return
 
             except Exception as e:
                 print(ERROR_MESSAGE + "\t" + str(type(e)) + ": " + str(e))
@@ -53,8 +54,6 @@ def main():
                 import traceback
                 print(traceback.format_exc())
                 pass
-            finally:
-                return
 
 
         # parse commands
