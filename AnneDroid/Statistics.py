@@ -25,8 +25,10 @@ class Statistics:
             else:
                 userWordCountDict[m.Author] = len(m.Message)
 
-        for userKey in sorted(key for (key, value) in userWordCountDict.items()):
-            replyMessage += userKey + "\t:\t" + str(userWordCountDict[userKey]) + "\n"
+        listOfTuples = sorted(userWordCountDict.items(), reverse=True, key=lambda x: x[1])
+
+        for tup in listOfTuples:
+            replyMessage += tup[0] + "\t:\t" + str(tup[1]) + "\n"
 
         return replyMessage
 
