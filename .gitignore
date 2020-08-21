@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 .vs/
 /AnneDroid/.google-cookie
+/messages.db

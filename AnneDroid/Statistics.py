@@ -25,7 +25,7 @@ class Statistics:
             else:
                 userWordCountDict[m.Author] = len(m.Message)
 
-        for userKey in userWordCountDict.keys():
+        for userKey in sorted(userWordCountDict.items(), key=lambda item: item[1]).keys():
             replyMessage += userKey + "\t:\t" + str(userWordCountDict[userKey]) + "\n"
 
         return replyMessage
@@ -35,18 +35,19 @@ class Statistics:
 
         channelMessages = self.MessageStorage.select_messages_by_channel(mdbChannel)
 
-        words = []
+        nouns = []
         for m in channelMessages:
             if m.Message.startswith(Command.Command.KEYWORD_ACTIVE):
                 continue
-            more_words = nltk.word_tokenize(m.Message, language=language)
-            words.extend(more_words)
-
-        nouns = []
-        tags = self.Tagger.tag_sent(words, taglevel=3)
-        for tag in tags:
-            if tag[3] == "NN" or tag[3] == "NE":
-                nouns.append(tag[0])
+            words = nltk.word_tokenize(m.Message, language=language)
+            try:
+                tags = self.Tagger.tag_sent(words, taglevel=3)
+                for tag in tags:
+                    if tag[3] == "NN" or tag[3] == "NE":
+                        nouns.append(tag[0])
+            except:
+                continue
+           
 
         distribution = nltk.FreqDist(nouns)
         most_common_nouns = distribution.most_common(num_of_nouns)

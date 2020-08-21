@@ -45,7 +45,8 @@ def main():
                         replyMessage = statistics.message_most_common_nouns(mdbChannel)
 
                     if len(replyMessage) > 0:
-                        await message.channel.send(replyMessage)
+                        if len(replyMessage.replace('\n', '')) > 0:
+                            await message.channel.send(replyMessage)
                         return
 
             except Exception as e:
