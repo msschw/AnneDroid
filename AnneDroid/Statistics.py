@@ -58,3 +58,14 @@ class Statistics:
 
         return replyMessage
 
+    def random_quote(self, mdbChannel):
+        import random
+        replyMessage = "\n"
+        channelMessages = self.MessageStorage.select_messages_by_channel(mdbChannel)
+
+        quote = random.choice(list(channelMessages))
+
+        replyMessage = "```" + quote.Author + ": " + quote.Message + "```"
+
+        return replyMessage
+
