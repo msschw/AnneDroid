@@ -44,6 +44,9 @@ def main():
                     if tokens[1] == "nouns":
                         replyMessage = statistics.message_most_common_nouns(mdbChannel)
 
+                    if tokens[1] == "quote":
+                        replyMessage = statistics.random_quote(mdbChannel)
+
                     if len(replyMessage) > 0:
                         if len(replyMessage.replace('\n', '')) > 0:
                             await message.channel.send(replyMessage)
