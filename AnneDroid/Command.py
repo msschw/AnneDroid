@@ -103,9 +103,12 @@ class Command(object):
 
         if self.Command == CommandType.help:
             reply = self.KEYWORD_COMMAND_HELP + ":\n\n"
-            reply += self.KEYWORD_COMMAND_GOOGLE + " " + "<query>" "\t:\t" + "perform google search\n"
-            reply += self.KEYWORD_COMMAND_WIKIPEDIA + " " + "<query>" "\t:\t" + "perform wikipedia search\n"
-            reply += self.KEYWORD_COMMAND_YOUTUBE + " " + "<query>" "\t:\t" + "perform youtube search\n"
+            reply += self.KEYWORD_COMMAND_GOOGLE + " " + "<query>" + "\t:\t" + "perform google search\n"
+            reply += self.KEYWORD_COMMAND_WIKIPEDIA + " " + "<query>" + "\t:\t" + "perform wikipedia search\n"
+            reply += self.KEYWORD_COMMAND_YOUTUBE + " " + "<query>" + "\t:\t" + "perform youtube search\n"
+            reply += "quote" + "\t:\t" + "print a random quote from the channel log\n"
+            reply += "nouns" + "\t:\t" + "list most used nouns from channel log\n"
+            reply += "stats" + "\t:\t" + "list total character count per user from channel log\n"
             return reply
 
         elif (self.Command == CommandType.google) and (self.Query != ""):
