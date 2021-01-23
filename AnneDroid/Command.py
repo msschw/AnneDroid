@@ -18,6 +18,8 @@ class CommandType(Enum):
     trivia = 3
     wiki = 4
     yt = 5
+    imdb = 6
+    metacritic = 7
 
 
 class Command(object):
@@ -30,6 +32,8 @@ class Command(object):
     KEYWORD_COMMAND_MOSCHUSGOOGLE = "moogle"
     KEYWORD_COMMAND_WIKIPEDIA = "wiki"
     KEYWORD_COMMAND_YOUTUBE = "yt"
+    KEYWORD_COMMAND_IMDB = "imdb"
+    KEYWORD_COMMAND_METACRITIC = "metacritic"
 
     KEYWORD_ACTION_ONESHOT = "oneshot"
     KEYWORD_ACTION_RESTART = "restart"
@@ -50,7 +54,9 @@ class Command(object):
         KEYWORD_COMMAND_HELP: CommandType.help,
         KEYWORD_COMMAND_MOSCHUSGOOGLE: CommandType.moogle,
         KEYWORD_COMMAND_WIKIPEDIA: CommandType.wiki,
-        KEYWORD_COMMAND_YOUTUBE: CommandType.yt
+        KEYWORD_COMMAND_YOUTUBE: CommandType.yt,
+        KEYWORD_COMMAND_IMDB: CommandType.imdb,
+        KEYWORD_COMMAND_METACRITIC: CommandType.metacritic,
     }
 
     Action = ActionType.none
@@ -106,6 +112,7 @@ class Command(object):
             reply += self.KEYWORD_COMMAND_GOOGLE + " " + "<query>" + "\t:\t" + "perform google search\n"
             reply += self.KEYWORD_COMMAND_WIKIPEDIA + " " + "<query>" + "\t:\t" + "perform wikipedia search\n"
             reply += self.KEYWORD_COMMAND_YOUTUBE + " " + "<query>" + "\t:\t" + "perform youtube search\n"
+            reply += self.KEYWORD_COMMAND_IMDB + " " + "<query>" + "\t:\t" + "perform imdb search\n"
             reply += "quote" + "\t:\t" + "print a random quote from the channel log\n"
             reply += "nouns" + "\t:\t" + "list most used nouns from channel log\n"
             reply += "stats" + "\t:\t" + "list total character count per user from channel log\n"
@@ -150,6 +157,18 @@ class Command(object):
                 if len(searchresult.videos) > 0:
                     return searchresult.videos[0]["title"] + ": " + "https://youtube.com" + searchresult.videos[0][
                         "url_suffix"]
+                else:
+                    raise CommandError("insufficient results")
+            except ImportError as ie:
+                raise ie
+        elif(self.Command == CommandType.imdb) and (self.Query != ""):
+            try:
+                from imdb import IMDb
+                imdb = IMDb()
+                matches = imdb.search_movie(self.Query)
+                if len(matches) > 0:
+
+                    return matches[0]['title'] + ": " + imdb.get_imdbURL(matches[0])
                 else:
                     raise CommandError("insufficient results")
             except ImportError as ie:
