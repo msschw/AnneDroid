@@ -39,5 +39,4 @@ class ProtonDBWebDriver:
             except:
                 rating = 'Fail'
 
-
         return rating + ': ' + href
