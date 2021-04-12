@@ -19,7 +19,8 @@ class CommandType(Enum):
     wiki = 4
     yt = 5
     imdb = 6
-    metacritic = 7
+    protondb = 7
+    metacritic = 8
 
 
 class Command(object):
@@ -33,6 +34,7 @@ class Command(object):
     KEYWORD_COMMAND_WIKIPEDIA = "wiki"
     KEYWORD_COMMAND_YOUTUBE = "yt"
     KEYWORD_COMMAND_IMDB = "imdb"
+    KEYWORD_COMMAND_PROTONDB = "protondb"
     KEYWORD_COMMAND_METACRITIC = "metacritic"
 
     KEYWORD_ACTION_ONESHOT = "oneshot"
@@ -56,7 +58,8 @@ class Command(object):
         KEYWORD_COMMAND_WIKIPEDIA: CommandType.wiki,
         KEYWORD_COMMAND_YOUTUBE: CommandType.yt,
         KEYWORD_COMMAND_IMDB: CommandType.imdb,
-        KEYWORD_COMMAND_METACRITIC: CommandType.metacritic,
+        KEYWORD_COMMAND_PROTONDB: CommandType.protondb,
+        KEYWORD_COMMAND_METACRITIC: CommandType.metacritic
     }
 
     Action = ActionType.none
@@ -173,6 +176,15 @@ class Command(object):
                     raise CommandError("insufficient results")
             except ImportError as ie:
                 raise ie
+
+        elif(self.Command == CommandType.protondb) and (self.Query != ""):
+            from ProtonDBWebDriver import ProtonDBWebDriver
+            protonDB = ProtonDBWebDriver()
+            result = protonDB.search(self.Query)
+            if result is not None:
+                return result
+            else:
+                raise CommandError("insufficient results")
 
         else:
             raise CommandError("invalid command")
