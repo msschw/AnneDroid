@@ -180,7 +180,7 @@ class Command(object):
         elif(self.Command == CommandType.protondb) and (self.Query != ""):
             from ProtonDBWebDriver import ProtonDBWebDriver
             protonDB = ProtonDBWebDriver()
-            result = protonDB.search(self.Query)
+            result = protonDB.search(self.Query.split(' '))
             if result is not None:
                 return result
             else:
