@@ -41,6 +41,3 @@ class ProtonDBWebDriver:
 
 
         return rating + ': ' + href
-
-pdb = ProtonDBWebDriver()
-print(pdb.search(['dota', '2']))
