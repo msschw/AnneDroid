@@ -33,7 +33,7 @@ class ProtonDBWebDriver:
             rating = ratingSpan.text
         except:
             try:
-                soup = BeautifulSoup(driver.page_source)
+                soup = BeautifulSoup(driver.page_source, 'html.parser')
                 ratingElement = soup.find('span', attrs={'class' : 'Summary__GrowingSpan-sc-18cac2b-1 BJNpc'})
                 rating = ratingElement.text
             except:
