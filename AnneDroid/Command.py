@@ -117,6 +117,7 @@ class Command(object):
             reply += self.KEYWORD_COMMAND_YOUTUBE + " " + "<query>" + "\t:\t" + "perform youtube search\n"
             reply += self.KEYWORD_COMMAND_IMDB + " " + "<query>" + "\t:\t" + "perform imdb search\n"
             reply += self.KEYWORD_COMMAND_PROTONDB + " " + "<query>" + "\t:\t" + "perform protondb search\n"
+            reply += self.KEYWORD_COMMAND_METACRITIC + " " + "<query>" + "\t:\t" + "perform metacritic search\n"
             reply += "quote" + "\t:\t" + "print a random quote from the channel log\n"
             reply += "nouns" + "\t:\t" + "list most used nouns from channel log\n"
             reply += "stats" + "\t:\t" + "list total character count per user from channel log\n"
