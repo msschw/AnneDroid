@@ -179,6 +179,15 @@ class Command(object):
             except ImportError as ie:
                 raise ie
 
+        elif(self.Command == CommandType.metacritic) and (self.Query != ""):
+            from MetacriticWebDriver import MetacriticWebDriver
+            metacritic = MetacriticWebDriver()
+            result = metacritic.search(self.Query.split(' '))
+            if result is not None:
+                return result
+            else:
+                raise CommandError("insufficient results")
+
         elif(self.Command == CommandType.protondb) and (self.Query != ""):
             from ProtonDBWebDriver import ProtonDBWebDriver
             protonDB = ProtonDBWebDriver()
