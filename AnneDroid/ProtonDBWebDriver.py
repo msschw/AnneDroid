@@ -39,4 +39,4 @@ class ProtonDBWebDriver:
             except:
                 rating = 'Fail'
 
-        return rating + ': ' + href
+        return ' '.join(query) + ': ' + rating + '\n' + href
