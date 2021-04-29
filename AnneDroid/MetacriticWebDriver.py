@@ -1,5 +1,6 @@
 from selenium import webdriver
 from bs4 import BeautifulSoup
+import re
 
 class MetacriticWebDriver:
     def search(self, query):
@@ -22,9 +23,12 @@ class MetacriticWebDriver:
             hrefNode = titleElement.findChild()
             title = hrefNode.text.replace('\n', '').lstrip().strip()
             href = baseurl + hrefNode.attrs.get('href')
-            ratingNode = soup.find('span', attrs={'class' : 'metascore_w medium tvshow positive'})
+            ratingNode = soup.find('span', re.compile('metascore_w medium'))
             rating = ratingNode.text
         except:
-            return None
+            if(href != ''):
+                return title + ': ' + rating + '\n' + href
+            else:
+                return None
 
         return title + ': ' + rating + '\n' + href
