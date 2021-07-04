@@ -8,3 +8,5 @@ nltk~=3.5
 HanTa~=0.1.1
 IMDbPY>=2020.09.20
 selenium~=3.141.0
+matplotlib~=3.4.2
+pandas~=1.2.5

@@ -47,6 +47,32 @@ def main():
                     if tokens[1] == "quote":
                         replyMessage = statistics.random_quote(mdbChannel)
 
+                    if tokens[1] == "rki":
+                        if len(tokens) > 3:
+                            from RKINowCasting import RKINowCasting
+                            rki = RKINowCasting()
+                            daysBack = 0
+                            try:
+                                daysBack = int(tokens[3])
+                            except:
+                                daysBack = 0
+                            if tokens[2] == "r":
+                                try:
+                                    rki.PlotR("figure.png", daysBack=daysBack)
+                                    await message.channel.send(file=discord.File("figure.png"))
+                                    os.remove("figure.png")
+                                    return
+                                except:
+                                    pass
+                            if tokens[2] == "c":
+                                try:
+                                    rki.PlotCases("figure.png", daysBack=daysBack)
+                                    await message.channel.send(file=discord.File("figure.png"))
+                                    os.remove("figure.png")
+                                    return
+                                except:
+                                    pass
+
                     if len(replyMessage) > 0:
                         if len(replyMessage.replace('\n', '')) > 0:
                             await message.channel.send(replyMessage)

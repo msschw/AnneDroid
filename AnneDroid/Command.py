@@ -59,7 +59,7 @@ class Command(object):
         KEYWORD_COMMAND_YOUTUBE: CommandType.yt,
         KEYWORD_COMMAND_IMDB: CommandType.imdb,
         KEYWORD_COMMAND_PROTONDB: CommandType.protondb,
-        KEYWORD_COMMAND_METACRITIC: CommandType.metacritic
+        KEYWORD_COMMAND_METACRITIC: CommandType.metacritic,
     }
 
     Action = ActionType.none
@@ -118,6 +118,8 @@ class Command(object):
             reply += self.KEYWORD_COMMAND_IMDB + " " + "<query>" + "\t:\t" + "perform imdb search\n"
             reply += self.KEYWORD_COMMAND_PROTONDB + " " + "<query>" + "\t:\t" + "perform protondb search\n"
             reply += self.KEYWORD_COMMAND_METACRITIC + " " + "<query>" + "\t:\t" + "perform metacritic search\n"
+            reply += "rki r <number_of_days>" + "\t:\t" + "generate figure displaying german rki R value for the last number of days specified\n"
+            reply += "rki c <number_of_days>" + "\t:\t" + "generate figure displaying german covid cases for the last number of days specified\n"
             reply += "quote" + "\t:\t" + "print a random quote from the channel log\n"
             reply += "nouns" + "\t:\t" + "list most used nouns from channel log\n"
             reply += "stats" + "\t:\t" + "list total character count per user from channel log\n"
