@@ -8,7 +8,7 @@ class RKINowCasting:
 
     def __init__(self):
         self.filename = "Nowcast_R_aktuell.csv"
-        self.url = "https://raw.githubusercontent.com/robert-koch-institut/SARS-CoV-2-Nowcasting_und_-R-Schaetzung/dd6dff15f8f2027581515cb5b60e648834ed38bf/"+ self.filename
+        self.url = "https://raw.githubusercontent.com/robert-koch-institut/SARS-CoV-2-Nowcasting_und_-R-Schaetzung/main/"+ self.filename
         urllib.request.urlretrieve(self.url, self.filename)
 
     def PlotR(self, path, daysBack = 0):
