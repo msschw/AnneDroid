@@ -41,8 +41,8 @@ def main():
                     if tokens[1] == "stats":
                         replyMessage = statistics.message_length_stats(mdbChannel)
 
-                    if tokens[1] == "nouns":
-                        replyMessage = statistics.message_most_common_nouns(mdbChannel)
+                    #if tokens[1] == "nouns":
+                    #    replyMessage = statistics.message_most_common_nouns(mdbChannel)
 
                     if tokens[1] == "quote":
                         replyMessage = statistics.random_quote(mdbChannel)
