@@ -15,9 +15,9 @@ class RKINowCasting:
         columns = pandas.read_csv(self.filename)
         dates = pandas.to_datetime(columns['Datum'])
 
-        lower_four_days_r = columns['UG_PI_4_Tage_R_Wert']
-        upper_four_days_r = columns['OG_PI_4_Tage_R_Wert']
-        four_days_r = columns['PS_4_Tage_R_Wert']
+        lower_four_days_r = columns['UG_PI_7_Tage_R_Wert']
+        upper_four_days_r = columns['OG_PI_7_Tage_R_Wert']
+        four_days_r = columns['PS_7_Tage_R_Wert']
 
         x = dates
 
@@ -62,4 +62,3 @@ class RKINowCasting:
         ax.fill_between(x, y_lower, y_upper, alpha=0.2)
         fig.autofmt_xdate()
         fig.savefig(path)
-
