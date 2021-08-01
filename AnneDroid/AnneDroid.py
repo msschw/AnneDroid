@@ -46,6 +46,11 @@ def main():
     async def stats(context):
         await context.send(statistics.message_length_stats(message_db_channelname(context)))
 
+    @bot.command(name='quote', help='show random quote from current channel')
+    @commands.guild_only()
+    async def quote(context):
+        await context.send(statistics.random_quote(message_db_channelname(context)))
+
     @bot.command(name='google', help="perform Google search")
     async def google(context, query):
         from googlesearch import search
