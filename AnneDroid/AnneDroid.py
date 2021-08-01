@@ -2,6 +2,7 @@ import os
 import random
 import datetime
 import threading
+import os
 
 import MessageStorage
 import Statistics
@@ -138,6 +139,25 @@ def main():
             await context.send(context.message.author.mention + ' ' + ' '.join(message))
         except Exception as e:
             await context.author.send("Could not set timer: " + repr(e))
+
+    @bot.command(name='rki', help='Generate diagram from RKI CoViD19 nowcasting')
+    async def rki(context, selector, days: int = 0):
+        import RKINowCasting
+        rki = RKINowCasting()
+
+        filename = 'figure.png'
+
+        if selector.lower().startswith('r'):
+            rki.PlotR(filename, daysBack=days)
+
+        if selector.lower().startswith('c'):
+            rki.PlotCases(filename, daysBack=days)
+
+        if os.path.isfile(filename):
+            with open(filename, 'rb') as f:
+                picture = discord.File(f)
+                await context.send(file=picture)
+            os.remove(filename)
 
     async def set_idle_state():
         await bot.change_presence(activity=discord.Game(name="with herself"), status=discord.Status.online)
