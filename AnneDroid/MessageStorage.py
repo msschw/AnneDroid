@@ -5,8 +5,6 @@ from Message import Message
 from Errors import StorageError
 
 
-
-
 class MessageStorage:
     SQL_CREATE_MESSAGES_TABLE = """CREATE TABLE IF NOT EXISTS messages (
                                         id integer PRIMARY KEY,

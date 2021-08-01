@@ -1,130 +1,121 @@
 import os
 import random
 import datetime
-import discord
 import MessageStorage
 import Statistics
 
-from dotenv import load_dotenv
-from Command import Command
+from discord.ext import commands
+import discord
 
+from dotenv import load_dotenv
 
 def main():
     load_dotenv()
     TOKEN = os.getenv('ANNEDROID_TOKEN')
 
-    ERROR_MESSAGE_COMMAND = "you are the weakest link"
-    ERROR_MESSAGE = "i am the weakest link, goodbye!"
-
     MESSAGE_DATABASE = "messages.db"
 
     mdb = MessageStorage.MessageStorage(MESSAGE_DATABASE)
     statistics = Statistics.Statistics(mdb)
-    client = discord.Client()
+    bot = commands.Bot(command_prefix='!')
 
-    @client.event
+    def message_db_channelname(message):
+        return message.guild.name + ":" + message.channel.name
+
+    @bot.event
     async def on_message(message):
-        from Errors import CommandError
-        if message.author == client.user:
+        if message.author == bot.user:
             return
 
-        # log message
-        mdbChannel = message.guild.name + ":" + message.channel.name
-        mdb.insert_message(MessageStorage.Message(message.author.name, message.content, mdbChannel, datetime.datetime.now().strftime(MessageStorage.Message.FORMAT)))
+        # message storage
+        if(message.guild is not None):
+            mdb.insert_message(MessageStorage.Message(message.author.name, message.content, message_db_channelname(message), datetime.datetime.now().strftime(MessageStorage.Message.FORMAT)))
 
-        # check for stats
-        if message.content.startswith(Command.KEYWORD_ACTIVE):
-            try:
-                tokens = message.content.split(' ')
-                if len(tokens) > 1:
-                    replyMessage = ""
-                    if tokens[1] == "stats":
-                        replyMessage = statistics.message_length_stats(mdbChannel)
+        # process commands
+        await bot.process_commands(message)
 
-                    #if tokens[1] == "nouns":
-                    #    replyMessage = statistics.message_most_common_nouns(mdbChannel)
+    @bot.command(name='stats', help='show channel stats')
+    @commands.guild_only()
+    async def stats(context):
+        await context.send(statistics.message_length_stats(message_db_channelname(context)))
 
-                    if tokens[1] == "quote":
-                        replyMessage = statistics.random_quote(mdbChannel)
-
-                    if tokens[1] == "rki":
-                        if len(tokens) > 3:
-                            from RKINowCasting import RKINowCasting
-                            rki = RKINowCasting()
-                            daysBack = 0
-                            try:
-                                daysBack = int(tokens[3])
-                            except:
-                                daysBack = 0
-                            if tokens[2] == "r":
-                                try:
-                                    rki.PlotR("figure.png", daysBack=daysBack)
-                                    await message.channel.send(file=discord.File("figure.png"))
-                                    os.remove("figure.png")
-                                    return
-                                except:
-                                    pass
-                            if tokens[2] == "c":
-                                try:
-                                    rki.PlotCases("figure.png", daysBack=daysBack)
-                                    await message.channel.send(file=discord.File("figure.png"))
-                                    os.remove("figure.png")
-                                    return
-                                except:
-                                    pass
-
-                    if len(replyMessage) > 0:
-                        if len(replyMessage.replace('\n', '')) > 0:
-                            await message.channel.send(replyMessage)
-                        return
-
-            except Exception as e:
-                print(ERROR_MESSAGE + "\t" + str(type(e)) + ": " + str(e))
-                # print trace
-                import traceback
-                print(traceback.format_exc())
-                pass
-
-
-        # parse commands
+    @bot.command(name='google', help="perform Google search")
+    async def google(context, query):
+        from googlesearch import search
         try:
-            if message.content.startswith(Command.KEYWORD_ACTIVE):
-                await set_dnd_state(message.author.name + "'s request")
-                cmd = Command(message.content)
-                reply = cmd.Execute()
+            searchresult = search(query=query, start=0, stop=1)
+            await context.send(next(searchresult))
+        except:
+            await context.author.send("Query '" + query + "' provided no results.")
 
-                # send the reply
-                if len(reply) > 0:
-                    await message.channel.send(reply)
+    @bot.command(name='wiki', help="perform wikipedia search")
+    async def wikipedia(context, query):
+        from wikipedia import search, page, exceptions
+        searchresult = search(query=query)
+        # just lookup the first one
+        if len(searchresult) > 0:
+            try:
+                wikipage = page(searchresult[0])
+                await context.send(wikipage.title + ": " + wikipage.url)
+            except exceptions.DisambiguationError as de:
+                wikipage = page(random.choice(de.options))
+                await context.send("(Amb.) " + wikipage.title + ": " + wikipage.url)
+        else:
+            await context.author.send("Query '" + query + "' provided no results.")
 
-        except CommandError as e:
-            # send the error
-            await message.author.send(
-                ERROR_MESSAGE_COMMAND + ", " + message.author.name + "!" + "\t" + str(type(e)) + ": " + str(e))
-        except Exception as e:
-            # do not send internal error
-            # await message.channel.send(ERROR_MESSAGE + "\t" + str(type(e)) + ": " + str(e))
-            # print instead
-            print(ERROR_MESSAGE + "\t" + str(type(e)) + ": " + str(e))
-            # print trace
-            import traceback
-            print(traceback.format_exc())
-            pass
-        finally:
-            await set_idle_state()
+    @bot.command(name='yt', help='perform YouTube search')
+    async def youtube(context, query):
+        from youtube_search import YoutubeSearch
+        searchresult = YoutubeSearch(search_terms=query, max_results=1)
+        # just lookup the first one
+        if len(searchresult.videos) > 0:
+            await context.send(searchresult.videos[0]["title"] + ": " + "https://youtube.com" + searchresult.videos[0][
+                "url_suffix"])
+        else:
+            await context.author.send("Query '" + query + "' provided no results.")
+
+    @bot.command(name='imdb', help='perform iMDB search')
+    async def imdb(context, query):
+        from imdb import IMDb
+        imdb = IMDb()
+        matches = imdb.search_movie(query)
+        if len(matches) > 0:
+            await context.send(matches[0]['title'] + ": " + imdb.get_imdbURL(matches[0]))
+        else:
+            await context.author.send("Query '" + query + "' provided no results.")
+
+    @bot.command(name='metacritic', help='perform Metacritic search')
+    async def metacritic(context, query):
+        from MetacriticWebDriver import MetacriticWebDriver
+        metacritic = MetacriticWebDriver()
+        result = metacritic.search(query.split(' '))
+        if result is not None:
+            await context.send(result)
+        else:
+            await context.author.send("Query '" + query + "' provided no results.")
+
+    @bot.command(name='protondb', help='perform ProtonDB search')
+    async def protondb(context, query):
+        from ProtonDBWebDriver import ProtonDBWebDriver
+        protonDB = ProtonDBWebDriver()
+        result = protonDB.search(query.split(' '))
+        if result is not None:
+            await context.send(result)
+        else:
+            await context.author.send("Query '" + query + "' provided no results.")
 
     async def set_idle_state():
-        await client.change_presence(activity=discord.Game(name="with herself"), status=discord.Status.online)
+        await bot.change_presence(activity=discord.Game(name="with herself"), status=discord.Status.online)
 
     async def set_dnd_state(message):
-        await client.change_presence(activity=discord.Activity(name=message), status=discord.Status.dnd)
+        await bot.change_presence(activity=discord.Activity(name=message), status=discord.Status.dnd)
 
-    @client.event
+    @bot.event
     async def on_ready():
         await set_idle_state()
 
 
-    client.run(TOKEN)
+    bot.run(TOKEN)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,5 @@
 import nltk
 import codecs
-import Command
 
 from HanTa import HanoverTagger as ht
 
@@ -39,8 +38,6 @@ class Statistics:
 
         nouns = []
         for m in channelMessages:
-            if m.Message.startswith(Command.Command.KEYWORD_ACTIVE):
-                continue
             words = nltk.word_tokenize(m.Message, language=language)
             try:
                 tags = self.Tagger.tag_sent(words, taglevel=3)
