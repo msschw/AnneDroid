@@ -1,6 +1,8 @@
 import os
 import random
 import datetime
+import threading
+
 import MessageStorage
 import Statistics
 
@@ -17,7 +19,12 @@ def main():
 
     mdb = MessageStorage.MessageStorage(MESSAGE_DATABASE)
     statistics = Statistics.Statistics(mdb)
-    bot = commands.Bot(command_prefix='!')
+
+    help_command = commands.DefaultHelpCommand(
+        no_category='Available Commands'
+    )
+    bot = commands.Bot(command_prefix='!', help_command=help_command)
+
 
     def message_db_channelname(message):
         return message.guild.name + ":" + message.channel.name
@@ -103,6 +110,29 @@ def main():
             await context.send(result)
         else:
             await context.author.send("Query '" + query + "' provided no results.")
+
+    @bot.command(name='timer', help="set a timer specifying duration(XXhYYmZZs) and a message")
+    async def timer(context, time_str, message):
+        import asyncio
+        from datetime import timedelta
+        import re
+        regex = re.compile(r'((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?)s)?')
+        parts = regex.match(time_str)
+        if not parts:
+            await context.author.send("Please check queried time '" + time_str + "'to match format: XXhYYmZZs")
+        parts = parts.groupdict()
+        time_params = {}
+        for name, param in parts.items():
+            if param:
+                time_params[name] = int(param)
+        duration = timedelta(**time_params)
+
+        try:
+            seconds = float(duration.seconds)
+            await asyncio.sleep(seconds)
+            await context.send(context.message.author.mention + ' ' + message)
+        except Exception as e:
+            await context.author.send("Could not set timer: " + repr(e))
 
     async def set_idle_state():
         await bot.change_presence(activity=discord.Game(name="with herself"), status=discord.Status.online)
