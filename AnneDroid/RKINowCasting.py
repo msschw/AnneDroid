@@ -3,8 +3,8 @@ import pandas
 import matplotlib.pyplot as plt
 import urllib.request
 
-class RKINowCasting:
 
+class RKINowCasting:
 
     def __init__(self):
         self.filename = "Nowcast_R_aktuell.csv"
