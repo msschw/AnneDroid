@@ -142,7 +142,7 @@ def main():
 
     @bot.command(name='rki', help='Generate diagram from RKI CoViD19 nowcasting')
     async def rki(context, selector, days: int = 0):
-        import RKINowCasting
+        from RKINowCasting import RKINowCasting
         rki = RKINowCasting()
 
         filename = 'figure.png'
