@@ -52,18 +52,18 @@ def main():
         await context.send(statistics.random_quote(message_db_channelname(context)))
 
     @bot.command(name='google', help="perform Google search")
-    async def google(context, query):
+    async def google(context, *query):
         from googlesearch import search
         try:
-            searchresult = search(query=query, start=0, stop=1)
+            searchresult = search(query=' '.join(query), start=0, stop=1)
             await context.send(next(searchresult))
         except:
             await context.author.send("Query '" + query + "' provided no results.")
 
     @bot.command(name='wiki', help="perform wikipedia search")
-    async def wikipedia(context, query):
+    async def wikipedia(context, *query):
         from wikipedia import search, page, exceptions
-        searchresult = search(query=query)
+        searchresult = search(query=' '.join(query))
         # just lookup the first one
         if len(searchresult) > 0:
             try:
@@ -76,9 +76,9 @@ def main():
             await context.author.send("Query '" + query + "' provided no results.")
 
     @bot.command(name='yt', help='perform YouTube search')
-    async def youtube(context, query):
+    async def youtube(context, *query):
         from youtube_search import YoutubeSearch
-        searchresult = YoutubeSearch(search_terms=query, max_results=1)
+        searchresult = YoutubeSearch(search_terms=' '.join(query), max_results=1)
         # just lookup the first one
         if len(searchresult.videos) > 0:
             await context.send(searchresult.videos[0]["title"] + ": " + "https://youtube.com" + searchresult.videos[0][
@@ -87,27 +87,27 @@ def main():
             await context.author.send("Query '" + query + "' provided no results.")
 
     @bot.command(name='imdb', help='perform iMDB search')
-    async def imdb(context, query):
+    async def imdb(context, *query):
         from imdb import IMDb
         imdb = IMDb()
-        matches = imdb.search_movie(query)
+        matches = imdb.search_movie(' '.join(query))
         if len(matches) > 0:
             await context.send(matches[0]['title'] + ": " + imdb.get_imdbURL(matches[0]))
         else:
             await context.author.send("Query '" + query + "' provided no results.")
 
     @bot.command(name='metacritic', help='perform Metacritic search')
-    async def metacritic(context, query):
+    async def metacritic(context, *query):
         from MetacriticWebDriver import MetacriticWebDriver
         metacritic = MetacriticWebDriver()
-        result = metacritic.search(query.split(' '))
+        result = metacritic.search(query)
         if result is not None:
             await context.send(result)
         else:
             await context.author.send("Query '" + query + "' provided no results.")
 
     @bot.command(name='protondb', help='perform ProtonDB search')
-    async def protondb(context, query):
+    async def protondb(context, *query):
         from ProtonDBWebDriver import ProtonDBWebDriver
         protonDB = ProtonDBWebDriver()
         result = protonDB.search(query.split(' '))
@@ -117,7 +117,7 @@ def main():
             await context.author.send("Query '" + query + "' provided no results.")
 
     @bot.command(name='timer', help="set a timer specifying duration(XXhYYmZZs) and a message")
-    async def timer(context, time_str, message):
+    async def timer(context, time_str, *message):
         import asyncio
         from datetime import timedelta
         import re
@@ -135,7 +135,7 @@ def main():
         try:
             seconds = float(duration.seconds)
             await asyncio.sleep(seconds)
-            await context.send(context.message.author.mention + ' ' + message)
+            await context.send(context.message.author.mention + ' ' + ' '.join(message))
         except Exception as e:
             await context.author.send("Could not set timer: " + repr(e))
 
