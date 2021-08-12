@@ -110,7 +110,7 @@ def main():
     async def protondb(context, *query):
         from ProtonDBWebDriver import ProtonDBWebDriver
         protonDB = ProtonDBWebDriver()
-        result = protonDB.search(query.split(' '))
+        result = protonDB.search(query)
         if result is not None:
             await context.send(result)
         else:
