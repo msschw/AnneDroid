@@ -56,7 +56,16 @@ def main():
     async def google(context, *query):
         from googlesearch import search
         try:
-            searchresult = search(query=' '.join(query), start=0, stop=1)
+            searchresult = search(query=' '.join(query), start=0, stop=1, safe='on')
+            await context.send(next(searchresult))
+        except:
+            await context.author.send("Query '" + query + "' provided no results.")
+
+    @bot.command(name='googlensfw', help="perform NSFW Google search")
+    async def google(context, *query):
+        from googlesearch import search
+        try:
+            searchresult = search(query=' '.join(query), start=0, stop=1, safe='off')
             await context.send(next(searchresult))
         except:
             await context.author.send("Query '" + query + "' provided no results.")
