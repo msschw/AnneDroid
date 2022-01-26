@@ -168,6 +168,17 @@ def main():
                 await context.send(file=picture)
             os.remove(filename)
 
+    @bot.command(name='wa', help='query WolframAlpha')
+    async def wolframalpha(context, *query):
+        try:
+            import wolframalpha
+            client = wolframalpha.Client(os.getenv('WOLFRAMALPHA_API_KEY'))
+            result = client.query(' '.join(query))
+            await context.send(next(result.results).text)
+        except Exception as e:
+            await context.author.send("Could not query WolframAlpha: " + repr(e))
+
+
     async def set_idle_state():
         await bot.change_presence(activity=discord.Game(name="with herself"), status=discord.Status.online)
 
