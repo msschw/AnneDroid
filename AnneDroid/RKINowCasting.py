@@ -5,19 +5,21 @@ import urllib.request
 
 
 class RKINowCasting:
-
     def __init__(self):
         self.filename = "Nowcast_R_aktuell.csv"
-        self.url = "https://raw.githubusercontent.com/robert-koch-institut/SARS-CoV-2-Nowcasting_und_-R-Schaetzung/main/"+ self.filename
+        self.url = (
+            "https://raw.githubusercontent.com/robert-koch-institut/SARS-CoV-2-Nowcasting_und_-R-Schaetzung/main/"
+            + self.filename
+        )
         urllib.request.urlretrieve(self.url, self.filename)
 
-    def PlotR(self, path, daysBack = 0):
+    def PlotR(self, path, daysBack=0):
         columns = pandas.read_csv(self.filename)
-        dates = pandas.to_datetime(columns['Datum'])
+        dates = pandas.to_datetime(columns["Datum"])
 
-        lower_four_days_r = columns['UG_PI_7_Tage_R_Wert']
-        upper_four_days_r = columns['OG_PI_7_Tage_R_Wert']
-        four_days_r = columns['PS_7_Tage_R_Wert']
+        lower_four_days_r = columns["UG_PI_7_Tage_R_Wert"]
+        upper_four_days_r = columns["OG_PI_7_Tage_R_Wert"]
+        four_days_r = columns["PS_7_Tage_R_Wert"]
 
         x = dates
 
@@ -32,18 +34,18 @@ class RKINowCasting:
             y_upper = upper_four_days_r[-daysBack:]
 
         fig, ax = plt.subplots()
-        plot = ax.plot_date(x, y, '-')
+        plot = ax.plot_date(x, y, "-")
         ax.fill_between(x, y_lower, y_upper, alpha=0.2)
         fig.autofmt_xdate()
         fig.savefig(path)
 
-    def PlotCases(self, path, daysBack = 0):
+    def PlotCases(self, path, daysBack=0):
         columns = pandas.read_csv(self.filename)
-        dates = pandas.to_datetime(columns['Datum'])
+        dates = pandas.to_datetime(columns["Datum"])
 
-        lower_covid_cases = columns['UG_PI_COVID_Faelle']
-        upper_covid_cases = columns['OG_PI_COVID_Faelle']
-        covid_cases = columns['PS_COVID_Faelle']
+        lower_covid_cases = columns["UG_PI_COVID_Faelle"]
+        upper_covid_cases = columns["OG_PI_COVID_Faelle"]
+        covid_cases = columns["PS_COVID_Faelle"]
 
         x = dates
 
@@ -58,7 +60,7 @@ class RKINowCasting:
             y_upper = upper_covid_cases[-daysBack:]
 
         fig, ax = plt.subplots()
-        plot = ax.plot_date(x, y, '-')
+        plot = ax.plot_date(x, y, "-")
         ax.fill_between(x, y_lower, y_upper, alpha=0.2)
         fig.autofmt_xdate()
         fig.savefig(path)
