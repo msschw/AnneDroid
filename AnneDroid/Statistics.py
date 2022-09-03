@@ -3,12 +3,13 @@ import codecs
 
 from HanTa import HanoverTagger as ht
 
+
 class Statistics:
     def __init__(self, messageStorage):
         self.MessageStorage = messageStorage
-        self.Tagger = ht.HanoverTagger('morphmodel_ger.pgz')
+        self.Tagger = ht.HanoverTagger("morphmodel_ger.pgz")
 
-        nltk.download('punkt')
+        nltk.download("punkt")
 
     def message_length_stats(self, mdbChannel):
         replyMessage = "\n"
@@ -19,19 +20,21 @@ class Statistics:
         userWordCountDict = {}
         for m in channelMessages:
             count += 1
-            if (m.Author in userWordCountDict.keys()):
+            if m.Author in userWordCountDict.keys():
                 userWordCountDict[m.Author] += len(m.Message)
             else:
                 userWordCountDict[m.Author] = len(m.Message)
 
-        listOfTuples = sorted(userWordCountDict.items(), reverse=True, key=lambda x: x[1])
+        listOfTuples = sorted(
+            userWordCountDict.items(), reverse=True, key=lambda x: x[1]
+        )
 
         for tup in listOfTuples:
             replyMessage += tup[0] + "\t:\t" + str(tup[1]) + "\n"
 
         return replyMessage
 
-    def message_most_common_nouns(self, mdbChannel, num_of_nouns=5, language='german'):
+    def message_most_common_nouns(self, mdbChannel, num_of_nouns=5, language="german"):
         replyMessage = "\n"
 
         channelMessages = self.MessageStorage.select_messages_by_channel(mdbChannel)
@@ -46,17 +49,17 @@ class Statistics:
                         nouns.append(tag[0])
             except:
                 continue
-           
 
         distribution = nltk.FreqDist(nouns)
         most_common_nouns = distribution.most_common(num_of_nouns)
         for n in most_common_nouns:
-            replyMessage += n[0] + '\t:\t' + str(n[1]) + '\n'
+            replyMessage += n[0] + "\t:\t" + str(n[1]) + "\n"
 
         return replyMessage
 
     def random_quote(self, mdbChannel):
         import random
+
         replyMessage = "\n"
         channelMessages = self.MessageStorage.select_messages_by_channel(mdbChannel)
 
@@ -65,4 +68,3 @@ class Statistics:
         replyMessage = "```" + quote.Author + ": " + quote.Message + "```"
 
         return replyMessage
-
