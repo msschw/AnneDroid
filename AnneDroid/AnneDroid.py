@@ -31,9 +31,6 @@ def main():
     intents.message_content = True
     bot = commands.Bot(command_prefix='!', help_command=help_command, intents=intents)
 
-    help_command = commands.DefaultHelpCommand(no_category="Available Commands")
-    bot = commands.Bot(command_prefix="!", help_command=help_command)
-
     def message_db_channelname(message):
         return message.guild.name + ":" + message.channel.name
 
