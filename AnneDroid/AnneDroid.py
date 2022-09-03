@@ -24,7 +24,11 @@ def main():
     help_command = commands.DefaultHelpCommand(
         no_category='Available Commands'
     )
-    bot = commands.Bot(command_prefix='!', help_command=help_command)
+    intents = discord.Intents.default()
+    intents.messages = True
+    intents.guild_messages = True
+    intents.message_content = True
+    bot = commands.Bot(command_prefix='!', help_command=help_command, intents=intents)
 
 
     def message_db_channelname(message):
@@ -188,7 +192,6 @@ def main():
     @bot.event
     async def on_ready():
         await set_idle_state()
-
 
     bot.run(TOKEN)
 
