@@ -1,8 +1,7 @@
-import datetime
 import sqlite3
 
-from Message import Message
-from Errors import StorageError
+from errors import StorageError
+from message import Message
 
 
 class MessageStorage:
@@ -19,22 +18,22 @@ class MessageStorage:
 
     def __init__(self, filename):
         try:
-            self.Connection = sqlite3.connect(filename)
-            if self.Connection is not None:
-                c = self.Connection.cursor()
+            self.connection = sqlite3.connect(filename)
+            if self.connection is not None:
+                c = self.connection.cursor()
                 c.execute(self.SQL_CREATE_MESSAGES_TABLE)
         except sqlite3.Error as e:
             raise StorageError(e)
 
     def insert_message(self, message):
-        if self.Connection is not None:
+        if self.connection is not None:
             if isinstance(message, Message):
                 try:
-                    c = self.Connection.cursor()
+                    c = self.connection.cursor()
 
-                    m = (message.Author, message.Message, message.Channel, message.Date)
+                    m = (message.author, message.message, message.channel, message.date)
                     c.execute(self.SQL_INSERT_MESSAGE, m)
-                    self.Connection.commit()
+                    self.connection.commit()
 
                     return c.lastrowid
                 except Exception as e:
@@ -44,8 +43,8 @@ class MessageStorage:
                 raise StorageError()
 
     def select_messages(self):
-        if self.Connection is not None:
-            c = self.Connection.cursor()
+        if self.connection is not None:
+            c = self.connection.cursor()
             c.execute("SELECT * FROM messages")
 
             rows = c.fetchall()
@@ -53,8 +52,8 @@ class MessageStorage:
                 yield Message(r[1], r[2], r[3])
 
     def select_messages_by_author(self, author):
-        if self.Connection is not None:
-            c = self.Connection.cursor()
+        if self.connection is not None:
+            c = self.connection.cursor()
             c.execute("SELECT * FROM messages WHERE author=?", (author,))
 
             rows = c.fetchall()
@@ -62,8 +61,8 @@ class MessageStorage:
                 yield Message(r[1], r[2], r[3], r[4])
 
     def select_messages_by_channel(self, channel):
-        if self.Connection is not None:
-            c = self.Connection.cursor()
+        if self.connection is not None:
+            c = self.connection.cursor()
             c.execute("SELECT * FROM messages WHERE channel=?", (channel,))
 
             rows = c.fetchall()

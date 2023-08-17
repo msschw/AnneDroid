@@ -1,35 +1,30 @@
+import datetime
 import os
 import random
-import datetime
-import threading
-import os
 
-import MessageStorage
-import Statistics
-
-from discord.ext import commands
 import discord
-
+from discord.ext import commands
 from dotenv import load_dotenv
+
+import message_storage as ms
+import statistics as stat
 
 
 def main():
     load_dotenv()
-    TOKEN = os.getenv("ANNEDROID_TOKEN")
+    token = os.getenv("ANNEDROID_TOKEN")
 
-    MESSAGE_DATABASE = "messages.db"
+    message_database = "messages.db"
 
-    mdb = MessageStorage.MessageStorage(MESSAGE_DATABASE)
-    statistics = Statistics.Statistics(mdb)
+    mdb = ms.MessageStorage(message_database)
+    statistics = stat.Statistics(mdb)
 
-    help_command = commands.DefaultHelpCommand(
-        no_category='Available Commands'
-    )
+    help_command = commands.DefaultHelpCommand(no_category="Available Commands")
     intents = discord.Intents.default()
     intents.messages = True
     intents.guild_messages = True
     intents.message_content = True
-    bot = commands.Bot(command_prefix='!', help_command=help_command, intents=intents)
+    bot = commands.Bot(command_prefix="!", help_command=help_command, intents=intents)
 
     def message_db_channelname(message):
         return message.guild.name + ":" + message.channel.name
@@ -42,11 +37,11 @@ def main():
         # message storage
         if message.guild is not None:
             mdb.insert_message(
-                MessageStorage.Message(
+                ms.Message(
                     message.author.name,
                     message.content,
                     message_db_channelname(message),
-                    datetime.datetime.now().strftime(MessageStorage.Message.FORMAT),
+                    datetime.datetime.now().strftime(ms.Message.FORMAT),
                 )
             )
 
@@ -132,7 +127,7 @@ def main():
 
     @bot.command(name="metacritic", help="perform Metacritic search")
     async def metacritic(context, *query):
-        from MetacriticWebDriver import MetacriticWebDriver
+        from metacritic_webdriver import MetacriticWebDriver
 
         metacritic = MetacriticWebDriver()
         result = metacritic.search(query)
@@ -143,7 +138,7 @@ def main():
 
     @bot.command(name="protondb", help="perform ProtonDB search")
     async def protondb(context, *query):
-        from ProtonDBWebDriver import ProtonDBWebDriver
+        from protondb_webdriver import ProtonDBWebDriver
 
         protonDB = ProtonDBWebDriver()
         result = protonDB.search(query)
@@ -184,7 +179,7 @@ def main():
 
     @bot.command(name="rki", help="Generate diagram from RKI CoViD19 nowcasting")
     async def rki(context, selector, days: int = 0):
-        from RKINowCasting import RKINowCasting
+        from rki_nowcasting import RKINowCasting
 
         rki = RKINowCasting()
 
@@ -194,7 +189,7 @@ def main():
             rki.PlotR(filename, daysBack=days)
 
         if selector.lower().startswith("c"):
-            rki.PlotCases(filename, daysBack=days)
+            rki.PlotCases(filename, days_back=days)
 
         if os.path.isfile(filename):
             with open(filename, "rb") as f:
@@ -227,7 +222,7 @@ def main():
     async def on_ready():
         await set_idle_state()
 
-    bot.run(TOKEN)
+    bot.run(token)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
-from selenium import webdriver
 from bs4 import BeautifulSoup
+from selenium import webdriver
 
 
 class ProtonDBWebDriver:
@@ -15,14 +15,14 @@ class ProtonDBWebDriver:
         driver.get(url)
         href = ""
         try:
-            linkButton = driver.find_element_by_class_name("kZnLdd")
-            linkButtonA = linkButton.find_element_by_tag_name("a")
-            href = linkButtonA.get_attribute("href")
+            link_button = driver.find_element_by_class_name("kZnLdd")
+            link_button_a = link_button.find_element_by_tag_name("a")
+            href = link_button_a.get_attribute("href")
         except:
             try:
-                linkButton = driver.find_element_by_class_name("etrWhy")
-                linkButtonA = linkButton.find_element_by_tag_name("a")
-                href = linkButtonA.get_attribute("href")
+                link_button = driver.find_element_by_class_name("etrWhy")
+                link_button_a = link_button.find_element_by_tag_name("a")
+                href = link_button_a.get_attribute("href")
             except:
                 return None
 
@@ -30,15 +30,15 @@ class ProtonDBWebDriver:
         rating = "Garbage"
         try:
             driver.get(href)
-            ratingSpan = driver.find_element_by_class_name("BJNpc")
-            rating = ratingSpan.text
+            rating_span = driver.find_element_by_class_name("BJNpc")
+            rating = rating_span.text
         except:
             try:
                 soup = BeautifulSoup(driver.page_source, "html.parser")
-                ratingElement = soup.find(
+                rating_element = soup.find(
                     "span", attrs={"class": "Summary__GrowingSpan-sc-18cac2b-1 BJNpc"}
                 )
-                rating = ratingElement.text
+                rating = rating_element.text
             except:
                 rating = "Fail"
 

@@ -1,7 +1,7 @@
-import numpy as np
-import pandas
-import matplotlib.pyplot as plt
 import urllib.request
+
+import matplotlib.pyplot as plt
+import pandas
 
 
 class RKINowCasting:
@@ -39,7 +39,7 @@ class RKINowCasting:
         fig.autofmt_xdate()
         fig.savefig(path)
 
-    def PlotCases(self, path, daysBack=0):
+    def PlotCases(self, path, days_back=0):
         columns = pandas.read_csv(self.filename)
         dates = pandas.to_datetime(columns["Datum"])
 
@@ -52,12 +52,12 @@ class RKINowCasting:
         y = covid_cases
         y_lower = lower_covid_cases
         y_upper = upper_covid_cases
-        if daysBack > 0:
-            x = dates[-daysBack:]
+        if days_back > 0:
+            x = dates[-days_back:]
 
-            y = covid_cases[-daysBack:]
-            y_lower = lower_covid_cases[-daysBack:]
-            y_upper = upper_covid_cases[-daysBack:]
+            y = covid_cases[-days_back:]
+            y_lower = lower_covid_cases[-days_back:]
+            y_upper = upper_covid_cases[-days_back:]
 
         fig, ax = plt.subplots()
         plot = ax.plot_date(x, y, "-")

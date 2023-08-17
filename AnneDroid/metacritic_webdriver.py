@@ -1,6 +1,7 @@
-from selenium import webdriver
-from bs4 import BeautifulSoup
 import re
+
+from bs4 import BeautifulSoup
+from selenium import webdriver
 
 
 class MetacriticWebDriver:
@@ -20,12 +21,12 @@ class MetacriticWebDriver:
         rating = ""
         try:
             soup = BeautifulSoup(driver.page_source, "html.parser")
-            titleElement = soup.find("h3", attrs={"class": "product_title basic_stat"})
-            hrefNode = titleElement.findChild()
-            title = hrefNode.text.replace("\n", "").lstrip().strip()
-            href = baseurl + hrefNode.attrs.get("href")
-            ratingNode = soup.find("span", re.compile("metascore_w medium"))
-            rating = ratingNode.text
+            title_element = soup.find("h3", attrs={"class": "product_title basic_stat"})
+            href_node = title_element.findChild()
+            title = href_node.text.replace("\n", "").lstrip().strip()
+            href = baseurl + href_node.attrs.get("href")
+            rating_node = soup.find("span", re.compile("metascore_w medium"))
+            rating = rating_node.text
         except:
             if href != "":
                 return title + ": " + rating + "\n" + href
