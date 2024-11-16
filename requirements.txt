@@ -1,4 +1,5 @@
 discord
+duck-chat
 python-dotenv
 google
 wikipedia

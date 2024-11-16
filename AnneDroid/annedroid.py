@@ -208,6 +208,15 @@ def main():
         except Exception as e:
             await context.author.send("Could not query WolframAlpha: " + repr(e))
 
+    @bot.command(name="gpt", help="query ddg-ai-chat")
+    async def gpt(context, *query):
+        try:
+            from duck_chat import DuckChat
+            async with DuckChat() as chat:
+                await context.send(await chat.ask_question(" ".join(query)))
+        except Exception as e:
+            await context.author.send("Could not query AI chat: " + repr(e))
+
     async def set_idle_state():
         await bot.change_presence(
             activity=discord.Game(name="with herself"), status=discord.Status.online
