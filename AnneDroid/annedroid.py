@@ -1,6 +1,14 @@
+import aiohttp
+import asyncio
 import datetime
+import duck_chat
+import googlesearch
+import imdb as imdblib
 import os
 import random
+import wikipedia
+import wolframalpha
+import youtube_search
 
 import discord
 from discord.ext import commands
@@ -62,45 +70,43 @@ def main():
 
     @bot.command(name="google", help="perform Google search")
     async def google(context, *query):
-        from googlesearch import search
-
         try:
-            searchresult = search(query=" ".join(query), start=0, stop=1, safe="on")
+            searchresult = googlesearch.search(
+                query=" ".join(query), start=0, stop=1, safe="on"
+            )
             await context.send(next(searchresult))
         except:
             await context.author.send("Query '" + query + "' provided no results.")
 
     @bot.command(name="googlensfw", help="perform NSFW Google search")
     async def google(context, *query):
-        from googlesearch import search
-
         try:
-            searchresult = search(query=" ".join(query), start=0, stop=1, safe="off")
+            searchresult = googlesearch.search(
+                query=" ".join(query), start=0, stop=1, safe="off"
+            )
             await context.send(next(searchresult))
         except:
             await context.author.send("Query '" + query + "' provided no results.")
 
     @bot.command(name="wiki", help="perform wikipedia search")
     async def wikipedia(context, *query):
-        from wikipedia import search, page, exceptions
-
-        searchresult = search(query=" ".join(query))
+        searchresult = wikipedia.search(query=" ".join(query))
         # just lookup the first one
         if len(searchresult) > 0:
             try:
-                wikipage = page(searchresult[0])
+                wikipage = wikipedia.page(searchresult[0])
                 await context.send(wikipage.title + ": " + wikipage.url)
-            except exceptions.DisambiguationError as de:
-                wikipage = page(random.choice(de.options))
+            except wikipedia.exceptions.DisambiguationError as de:
+                wikipage = wikipedia.page(random.choice(de.options))
                 await context.send("(Amb.) " + wikipage.title + ": " + wikipage.url)
         else:
             await context.author.send("Query '" + query + "' provided no results.")
 
     @bot.command(name="yt", help="perform YouTube search")
     async def youtube(context, *query):
-        from youtube_search import YoutubeSearch
-
-        searchresult = YoutubeSearch(search_terms=" ".join(query), max_results=1)
+        searchresult = youtube_search.YoutubeSearch(
+            search_terms=" ".join(query), max_results=1
+        )
         # just lookup the first one
         if len(searchresult.videos) > 0:
             await context.send(
@@ -114,36 +120,12 @@ def main():
 
     @bot.command(name="imdb", help="perform iMDB search")
     async def imdb(context, *query):
-        from imdb import IMDb
-
-        imdb = IMDb()
+        imdb = imdblib.IMDb()
         matches = imdb.search_movie(" ".join(query))
         if len(matches) > 0:
             await context.send(
                 matches[0]["title"] + ": " + imdb.get_imdbURL(matches[0])
             )
-        else:
-            await context.author.send("Query '" + query + "' provided no results.")
-
-    @bot.command(name="metacritic", help="perform Metacritic search")
-    async def metacritic(context, *query):
-        from metacritic_webdriver import MetacriticWebDriver
-
-        metacritic = MetacriticWebDriver()
-        result = metacritic.search(query)
-        if result is not None:
-            await context.send(result)
-        else:
-            await context.author.send("Query '" + query + "' provided no results.")
-
-    @bot.command(name="protondb", help="perform ProtonDB search")
-    async def protondb(context, *query):
-        from protondb_webdriver import ProtonDBWebDriver
-
-        protonDB = ProtonDBWebDriver()
-        result = protonDB.search(query)
-        if result is not None:
-            await context.send(result)
         else:
             await context.author.send("Query '" + query + "' provided no results.")
 
@@ -177,33 +159,11 @@ def main():
         except Exception as e:
             await context.author.send("Could not set timer: " + repr(e))
 
-    @bot.command(name="rki", help="Generate diagram from RKI CoViD19 nowcasting")
-    async def rki(context, selector, days: int = 0):
-        from rki_nowcasting import RKINowCasting
-
-        rki = RKINowCasting()
-
-        filename = "figure.png"
-
-        if selector.lower().startswith("r"):
-            rki.PlotR(filename, daysBack=days)
-
-        if selector.lower().startswith("c"):
-            rki.PlotCases(filename, days_back=days)
-
-        if os.path.isfile(filename):
-            with open(filename, "rb") as f:
-                picture = discord.File(f)
-                await context.send(file=picture)
-            os.remove(filename)
-
     @bot.command(name="wa", help="query WolframAlpha")
-    async def wolframalpha(context, *query):
+    async def wa(context, *query):
         try:
-            import wolframalpha
-
             client = wolframalpha.Client(os.getenv("WOLFRAMALPHA_API_KEY"))
-            result = client.query(" ".join(query))
+            result = await asyncio.to_thread(client.query, " ".join(query))
             await context.send(next(result.results).text)
         except Exception as e:
             await context.author.send("Could not query WolframAlpha: " + repr(e))
@@ -211,8 +171,6 @@ def main():
     @bot.command(name="gpt", help="query ddg-ai-chat")
     async def gpt(context, *query):
         try:
-            import aiohttp
-            from duck_chat import DuckChat
 
             session = aiohttp.ClientSession(
                 headers={
@@ -223,7 +181,7 @@ def main():
                 },
                 timeout=aiohttp.ClientTimeout(total=30),
             )
-            async with DuckChat(session=session) as chat:
+            async with duck_chat.DuckChat(session=session) as chat:
                 await context.send(await chat.ask_question(" ".join(query)))
         except Exception as e:
             await context.author.send("Could not query AI chat: " + repr(e))
