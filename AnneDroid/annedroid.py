@@ -211,8 +211,19 @@ def main():
     @bot.command(name="gpt", help="query ddg-ai-chat")
     async def gpt(context, *query):
         try:
+            import aiohttp
             from duck_chat import DuckChat
-            async with DuckChat() as chat:
+
+            session = aiohttp.ClientSession(
+                headers={
+                    "User-Agent": "DuckChat Client",
+                    "Connection": "keep-alive",
+                    "Cookie": "yourcookies",
+                    "x-vqd-4": "idk_what_this_is_for_its_probably_server_side_session_tracking",
+                },
+                timeout=aiohttp.ClientTimeout(total=30),
+            )
+            async with DuckChat(session=session) as chat:
                 await context.send(await chat.ask_question(" ".join(query)))
         except Exception as e:
             await context.author.send("Could not query AI chat: " + repr(e))
