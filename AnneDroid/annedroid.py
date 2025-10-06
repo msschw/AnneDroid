@@ -1,7 +1,7 @@
 import aiohttp
 import asyncio
 import datetime
-import duck_chat
+import ddgs
 import googlesearch
 import imdb as imdblib
 import os
@@ -13,6 +13,7 @@ import youtube_search
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
+from google import genai
 
 import message_storage as ms
 import statistics as stat
@@ -68,28 +69,36 @@ def main():
     async def quote(context):
         await context.send(statistics.random_quote(message_db_channelname(context)))
 
-    @bot.command(name="google", help="perform Google search")
-    async def google(context, *query):
+    @bot.command(name="gquote", help="show random quote from current channel and provide an analysis")
+    @commands.guild_only()
+    async def comment_quote(context):
+        quote = statistics.random_quote(message_db_channelname(context))
+        api_key = os.getenv("GEMINI_API_KEY")
         try:
-            searchresult = googlesearch.search(
-                query=" ".join(query), start=0, stop=1, safe="on"
+            client = genai.Client(api_key=api_key)
+            response = client.models.generate_content(
+                model='gemini-1.5-flash-002', contents="Provide a very sarcastic response to the following quote in maximum three sentences: " + " ".join(quote)
             )
-            await context.send(next(searchresult))
-        except:
-            await context.author.send("Query '" + query + "' provided no results.")
+            await context.send(f"{quote}\n{response.text}")
+        except Exception as e:
+            await context.author.send("Sorry, i failed")
 
-    @bot.command(name="googlensfw", help="perform NSFW Google search")
+    @bot.command(name="google", help="perform DDG search")
     async def google(context, *query):
         try:
-            searchresult = googlesearch.search(
-                query=" ".join(query), start=0, stop=1, safe="off"
-            )
-            await context.send(next(searchresult))
-        except:
-            await context.author.send("Query '" + query + "' provided no results.")
+            with ddgs.DDGS() as ddg:
+                searchresult = ddg.text(
+                    " ".join(query), max_results=1
+                )
+                if len(searchresult) > 0:
+                    await context.send(f'{searchresult[0]["title"]}: {searchresult[0]["href"]}')
+                else:
+                    await context.send("No results")
+        except Exception as e:
+            await context.author.send(f"Query {query} provided no results: {e}")
 
     @bot.command(name="wiki", help="perform wikipedia search")
-    async def wikipedia(context, *query):
+    async def wiki(context, *query):
         searchresult = wikipedia.search(query=" ".join(query))
         # just lookup the first one
         if len(searchresult) > 0:
@@ -185,6 +194,20 @@ def main():
                 await context.send(await chat.ask_question(" ".join(query)))
         except Exception as e:
             await context.author.send("Could not query AI chat: " + repr(e))
+
+    @bot.command(name="gem", help="query gemini 1.5 flash")
+    async def gemini(context, *query):
+        api_key = os.getenv("GEMINI_API_KEY")
+        try:
+            client = genai.Client(api_key=api_key)
+            response = client.models.generate_content(
+                model='gemini-2.5-flash', contents=" ".join(query)
+            )
+            chunks = [response.text[i:i + 2000] for i in range(0, len(response.text), 2000)]
+            for chunk in chunks:
+                await context.send(chunk)
+        except Exception as e:
+            await context.author.send("Could not query Gemini: " + repr(e))
 
     async def set_idle_state():
         await bot.change_presence(

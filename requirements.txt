@@ -1,14 +1,14 @@
 discord
-duck-chat
+ddgs
+proton-db
 python-dotenv
-google
+google-genai
 wikipedia
 youtube-search
 nltk
 numpy
 HanTa
 IMDbPY
-selenium
 matplotlib
 pandas
 wolframalpha
