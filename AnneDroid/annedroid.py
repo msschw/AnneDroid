@@ -2,7 +2,6 @@ import aiohttp
 import asyncio
 import datetime
 import ddgs
-import googlesearch
 import imdb as imdblib
 import os
 import random
