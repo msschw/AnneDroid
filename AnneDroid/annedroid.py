@@ -107,32 +107,38 @@ def main():
     @bot.command(name="wiki", help="perform wikipedia search")
     async def wiki(context, *query):
         searchresult = wikipedia.search(query=" ".join(query))
-        # just lookup the first one
-        if len(searchresult) > 0:
+        if len(searchresult) == 0:
+            await context.author.send("Query '" + query + "' provided no results.")
+            return
+
+        for title in searchresult:
             try:
-                wikipage = wikipedia.page(searchresult[0])
-                await context.send(wikipage.title + ": " + wikipage.url)
+                wikipage = wikipedia.page(title)
+                url = "https://en.wikipedia.org/wiki/" + urllib.parse.quote(title.replace(" ", "_"))
+                await context.send(wikipage.title + ": " + url)
+                return
             except wikipedia.exceptions.DisambiguationError as de:
-                tried = set()
-                for _ in range(5):
-                    option = random.choice(de.options)
-                    if option in tried:
-                        continue
-                    tried.add(option)
+                for option in de.options:
                     try:
                         wikipage = wikipedia.page(option)
+                        url = "https://en.wikipedia.org/wiki/" + urllib.parse.quote(option.replace(" ", "_"))
                         await context.send(
-                            "(Amb.) " + wikipage.title + ": " + wikipage.url
+                            "(Amb.) " + wikipage.title + ": " + url
                         )
                         return
                     except wikipedia.exceptions.DisambiguationError:
                         continue
+                    except wikipedia.exceptions.PageError:
+                        continue
                 await context.send(
-                    "Ambiguous query. Options: "
-                    + ", ".join(de.options[:10])
+                    title + " (disambiguation): "
+                    + ", ".join(de.options[:15])
                 )
-        else:
-            await context.author.send("Query '" + query + "' provided no results.")
+                return
+            except wikipedia.exceptions.PageError:
+                continue
+
+        await context.author.send("Query '" + query + "' provided no results.")
 
     @bot.command(name="yt", help="perform YouTube search")
     async def youtube(context, *query):
