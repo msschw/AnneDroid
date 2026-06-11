@@ -323,6 +323,29 @@ class TestProtondbCommand:
             assert "total" in rating_data
 
     @pytest.mark.asyncio
+    async def test_protondb_shows_no_rating_when_unavailable(self):
+        import aiohttp
+        async with aiohttp.ClientSession() as session:
+            params = {"term": "Halo", "cc": "us", "l": "en"}
+            async with session.get(
+                "https://store.steampowered.com/api/storesearch",
+                params=params,
+            ) as resp:
+                data = await resp.json()
+
+            items = data.get("items", [])
+            assert len(items) >= 1
+
+            first_id = items[0]["id"]
+            async with session.get(
+                f"https://www.protondb.com/api/v1/reports/summaries/{first_id}.json"
+            ) as resp:
+                assert resp.status != 200, (
+                    "first result should lack a ProtonDB rating "
+                    "for this test to be meaningful"
+                )
+
+    @pytest.mark.asyncio
     async def test_protondb_handles_bogus_query(self):
         import aiohttp
         async with aiohttp.ClientSession() as session:
@@ -334,4 +357,69 @@ class TestProtondbCommand:
                 data = await resp.json()
 
             items = data.get("items", [])
+            assert len(items) == 0
+
+
+# ---------------------------------------------------------------------------
+# !metacritic – Metacritic score from metacritic.com (no auth, scraped)
+# ---------------------------------------------------------------------------
+class TestMetacriticCommand:
+    @pytest.mark.asyncio
+    async def test_metacritic_returns_score_for_known_game(self):
+        import aiohttp, urllib.parse
+        from bs4 import BeautifulSoup
+
+        slug = urllib.parse.quote("half-life-2")
+        async with aiohttp.ClientSession(
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 (X11; Linux x86_64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/133.0.0.0 Safari/537.36"
+                )
+            }
+        ) as session:
+            async with session.get(
+                f"https://www.metacritic.com/search/game/{slug}/results"
+            ) as resp:
+                assert resp.status == 200
+                html = await resp.text()
+
+            soup = BeautifulSoup(html, "html.parser")
+            items = soup.select(".search-item")
+            assert len(items) > 0
+
+            name_el = items[0].select_one(".c-search-item__title")
+            score_el = items[0].select_one(".c-siteReviewScore span")
+            assert name_el is not None
+            assert score_el is not None
+            score = score_el.get_text(strip=True)
+            assert score.isdigit(), (
+                f"first result should have a numeric score, got {score!r}"
+            )
+            assert name_el.get_text(strip=True) == "Half-Life 2"
+
+    @pytest.mark.asyncio
+    async def test_metacritic_handles_bogus_query(self):
+        import aiohttp, urllib.parse
+        from bs4 import BeautifulSoup
+
+        slug = urllib.parse.quote("xyznonexistentgame123456")
+        async with aiohttp.ClientSession(
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 (X11; Linux x86_64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/133.0.0.0 Safari/537.36"
+                )
+            }
+        ) as session:
+            async with session.get(
+                f"https://www.metacritic.com/search/game/{slug}/results"
+            ) as resp:
+                assert resp.status == 200
+                html = await resp.text()
+
+            soup = BeautifulSoup(html, "html.parser")
+            items = soup.select(".search-item")
             assert len(items) == 0

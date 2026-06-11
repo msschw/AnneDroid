@@ -5,9 +5,11 @@ import ddgs
 import imdb as imdblib
 import os
 import random
+import urllib.parse
 import wikipedia
 import wolframalpha
 import youtube_search
+from bs4 import BeautifulSoup
 
 import discord
 from discord.ext import commands
@@ -221,6 +223,58 @@ def main():
                 )
         except Exception as e:
             await context.author.send("Could not query ProtonDB: " + repr(e))
+
+    @bot.command(name="metacritic", help="look up a game's Metacritic score")
+    async def metacritic(context, *query):
+        try:
+            game = " ".join(query)
+            slug = urllib.parse.quote(game.lower().replace(" ", "-"))
+            async with aiohttp.ClientSession(
+                headers={
+                    "User-Agent": (
+                        "Mozilla/5.0 (X11; Linux x86_64) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) "
+                        "Chrome/133.0.0.0 Safari/537.36"
+                    )
+                }
+            ) as session:
+                async with session.get(
+                    f"https://www.metacritic.com/search/game/{slug}/results"
+                ) as resp:
+                    if resp.status != 200:
+                        await context.send(
+                            "Could not reach Metacritic."
+                        )
+                        return
+                    html = await resp.text()
+
+                soup = BeautifulSoup(html, "html.parser")
+                items = soup.select(".search-item")
+
+                if len(items) == 0:
+                    await context.send(
+                        "No games found on Metacritic for that query."
+                    )
+                    return
+
+                for item in items:
+                    name_el = item.select_one(".c-search-item__title")
+                    score_el = item.select_one(".c-siteReviewScore span")
+                    if not name_el or not score_el:
+                        continue
+                    name = name_el.get_text(strip=True)
+                    score = score_el.get_text(strip=True)
+                    if score.isdigit():
+                        await context.send(f"{name}: **{score}**")
+                        return
+
+                await context.send(
+                    "No Metacritic rating available for any result."
+                )
+        except Exception as e:
+            await context.author.send(
+                "Could not query Metacritic: " + repr(e)
+            )
 
     @bot.command(name="gem", help="query gemini 1.5 flash")
     async def gemini(context, *query):
