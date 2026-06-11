@@ -15,6 +15,7 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 from google import genai
+from groq import AsyncGroq
 
 import message_storage as ms
 import statistics as stat
@@ -312,15 +313,41 @@ def main():
         except Exception as e:
             await context.author.send("Could not query Gemini: " + repr(e))
 
-    async def set_idle_state():
+    @bot.command(name="groq", help="query llama 3.3 via groq")
+    async def groq(context, *query):
+        api_key = os.getenv("GROQ_API_KEY")
+        try:
+            client = AsyncGroq(api_key=api_key)
+            response = await client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[{"role": "user", "content": " ".join(query)}],
+            )
+            text = response.choices[0].message.content
+            chunks = [text[i:i + 2000] for i in range(0, len(text), 2000)]
+            for chunk in chunks:
+                await context.send(chunk)
+        except Exception as e:
+            await context.author.send("Could not query Groq: " + repr(e))
+
+    async def set_idle_state(message=None):
+        name = message if message else "with herself"
         await bot.change_presence(
-            activity=discord.Game(name="with herself"), status=discord.Status.online
+            activity=discord.Game(name=name), status=discord.Status.online
         )
 
-    async def set_dnd_state(message):
+    async def set_dnd_state(message=None):
+        name = message if message else "with herself"
         await bot.change_presence(
-            activity=discord.Activity(name=message), status=discord.Status.dnd
+            activity=discord.Activity(name=name), status=discord.Status.dnd
         )
+
+    @bot.before_invoke
+    async def before_any_command(context):
+        await set_dnd_state(f"!{context.command.name}")
+
+    @bot.after_invoke
+    async def after_any_command(context):
+        await set_idle_state()
 
     @bot.event
     async def on_ready():

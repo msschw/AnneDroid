@@ -12,5 +12,7 @@ IMDbPY
 matplotlib
 pandas
 wolframalpha
+groq
+beautifulsoup4
 pytest
 pytest-asyncio

@@ -2,6 +2,7 @@ import sys
 import os
 import re
 import random
+import urllib.parse
 import asyncio
 from datetime import timedelta
 
@@ -143,16 +144,29 @@ class TestWikiCommand:
         except wikipedia.exceptions.DisambiguationError:
             pass
 
-    def test_wiki_disambiguation_picks_random_option(self):
-        results = wikipedia.search("Python")
+    def test_wiki_disambiguation_returns_best_match(self):
+        results = wikipedia.search("Money")
         assert len(results) > 0
         try:
             page = wikipedia.page(results[0])
         except wikipedia.exceptions.DisambiguationError as de:
-            chosen = random.choice(de.options)
-            page = wikipedia.page(chosen)
-        assert page.title
-        assert page.url
+            assert len(de.options) > 0
+            for option in de.options:
+                try:
+                    page = wikipedia.page(option)
+                    assert page.title
+                    assert page.url
+                    url = (
+                        "https://en.wikipedia.org/wiki/"
+                        + urllib.parse.quote(option.replace(" ", "_"))
+                    )
+                    assert url.startswith("https://en.wikipedia.org/wiki/")
+                    break
+                except (wikipedia.exceptions.DisambiguationError,
+                        wikipedia.exceptions.PageError):
+                    continue
+            else:
+                assert False, "no non-disambiguation option found"
 
     def test_wiki_returns_empty_for_bogus_query(self):
         results = wikipedia.search("xyznonexistentpage123456")
@@ -250,6 +264,51 @@ class TestGemCommand:
     async def test_gem_chunks_long_responses(self):
         response = _gemini_request("Write a paragraph about Python programming")
         text = response.text
+        chunks = [text[i : i + 2000] for i in range(0, len(text), 2000)]
+        assert len(chunks) >= 1
+        assert all(len(c) <= 2000 for c in chunks)
+        assert "".join(chunks) == text
+
+
+# ---------------------------------------------------------------------------
+# !groq – Groq (real endpoint, requires GROQ_API_KEY)
+# ---------------------------------------------------------------------------
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+try:
+    from groq import AsyncGroq
+
+    HAS_GROQ = True
+except ImportError:
+    HAS_GROQ = False
+
+
+@pytest.mark.skipif(
+    not HAS_GROQ or not GROQ_API_KEY,
+    reason="requires GROQ_API_KEY and groq",
+)
+class TestGroqCommand:
+    @pytest.mark.asyncio
+    async def test_groq_returns_response(self):
+        client = AsyncGroq(api_key=GROQ_API_KEY)
+        response = await client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": "Say hello in one word"}],
+        )
+        text = response.choices[0].message.content
+        assert text
+        assert len(text) > 0
+
+    @pytest.mark.asyncio
+    async def test_groq_chunks_long_responses(self):
+        client = AsyncGroq(api_key=GROQ_API_KEY)
+        response = await client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "user", "content": "Write a paragraph about Python programming"}
+            ],
+        )
+        text = response.choices[0].message.content
         chunks = [text[i : i + 2000] for i in range(0, len(text), 2000)]
         assert len(chunks) >= 1
         assert all(len(c) <= 2000 for c in chunks)
