@@ -113,8 +113,24 @@ def main():
                 wikipage = wikipedia.page(searchresult[0])
                 await context.send(wikipage.title + ": " + wikipage.url)
             except wikipedia.exceptions.DisambiguationError as de:
-                wikipage = wikipedia.page(random.choice(de.options))
-                await context.send("(Amb.) " + wikipage.title + ": " + wikipage.url)
+                tried = set()
+                for _ in range(5):
+                    option = random.choice(de.options)
+                    if option in tried:
+                        continue
+                    tried.add(option)
+                    try:
+                        wikipage = wikipedia.page(option)
+                        await context.send(
+                            "(Amb.) " + wikipage.title + ": " + wikipage.url
+                        )
+                        return
+                    except wikipedia.exceptions.DisambiguationError:
+                        continue
+                await context.send(
+                    "Ambiguous query. Options: "
+                    + ", ".join(de.options[:10])
+                )
         else:
             await context.author.send("Query '" + query + "' provided no results.")
 
