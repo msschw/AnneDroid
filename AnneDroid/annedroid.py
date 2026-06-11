@@ -199,13 +199,17 @@ def main():
                     await context.send("No Steam games found for that query.")
                     return
 
-                game_id = items[0]["id"]
-                game_name = items[0]["name"]
+                game = items[0]
+                game_id = game["id"]
+                game_name = game["name"]
 
                 async with session.get(
                     f"https://www.protondb.com/api/v1/reports/summaries/{game_id}.json"
                 ) as resp:
-                    rating_data = await resp.json()
+                    if resp.status != 200:
+                        await context.send(f"{game_name}: **No Rating**")
+                        return
+                    rating_data = await resp.json(content_type=None)
 
                 tier = rating_data.get("tier", "unknown")
                 confidence = rating_data.get("confidence", "unknown")
