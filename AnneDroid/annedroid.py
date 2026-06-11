@@ -3,6 +3,7 @@ import asyncio
 import datetime
 import ddgs
 import imdb as imdblib
+import io
 import os
 import random
 import urllib.parse
@@ -328,6 +329,33 @@ def main():
                 await context.send(chunk)
         except Exception as e:
             await context.author.send("Could not query Groq: " + repr(e))
+
+    @bot.command(name="hug", help="generate an image from a text prompt via HuggingFace")
+    async def hug(context, *query):
+        api_key = os.getenv("HF_API_KEY")
+        if not api_key:
+            await context.author.send("HF_API_KEY not set.")
+            return
+        try:
+            prompt = " ".join(query)
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            }
+            body = {"inputs": prompt}
+            async with aiohttp.ClientSession(headers=headers) as session:
+                async with session.post(
+                    "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell",
+                    json=body,
+                ) as resp:
+                    if resp.status != 200:
+                        text = await resp.text()
+                        await context.send(f"Could not generate image: {text[:200]}")
+                        return
+                    data = await resp.read()
+            await context.send(file=discord.File(fp=io.BytesIO(data), filename="hug.png"))
+        except Exception as e:
+            await context.author.send("Could not generate image: " + repr(e))
 
     async def set_idle_state(message=None):
         name = message if message else "with herself"

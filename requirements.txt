@@ -1,3 +1,4 @@
+aiohttp
 discord
 ddgs
 proton-db
