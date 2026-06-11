@@ -12,3 +12,5 @@ IMDbPY
 matplotlib
 pandas
 wolframalpha
+pytest
+pytest-asyncio

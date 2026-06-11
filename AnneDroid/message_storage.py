@@ -49,7 +49,7 @@ class MessageStorage:
 
             rows = c.fetchall()
             for r in rows:
-                yield Message(r[1], r[2], r[3])
+                yield Message(r[1], r[2], r[3], r[4])
 
     def select_messages_by_author(self, author):
         if self.connection is not None:

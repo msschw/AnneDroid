@@ -17,6 +17,12 @@ from google import genai
 import message_storage as ms
 import statistics as stat
 
+# Fix wikipedia library: use HTTPS and a proper User-Agent
+import wikipedia.wikipedia as _wiki_mod
+
+_wiki_mod.API_URL = "https://en.wikipedia.org/w/api.php"
+_wiki_mod.USER_AGENT = "AnneDroidBot/1.0 (annedroid-bot@example.com)"
+
 
 def main():
     load_dotenv()
@@ -176,23 +182,41 @@ def main():
         except Exception as e:
             await context.author.send("Could not query WolframAlpha: " + repr(e))
 
-    @bot.command(name="gpt", help="query ddg-ai-chat")
-    async def gpt(context, *query):
+    @bot.command(name="protondb", help="look up a game's ProtonDB rating")
+    async def protondb(context, *query):
         try:
+            game = " ".join(query)
+            async with aiohttp.ClientSession() as session:
+                params = {"term": game, "cc": "us", "l": "en"}
+                async with session.get(
+                    "https://store.steampowered.com/api/storesearch",
+                    params=params,
+                ) as resp:
+                    data = await resp.json()
 
-            session = aiohttp.ClientSession(
-                headers={
-                    "User-Agent": "DuckChat Client",
-                    "Connection": "keep-alive",
-                    "Cookie": "yourcookies",
-                    "x-vqd-4": "idk_what_this_is_for_its_probably_server_side_session_tracking",
-                },
-                timeout=aiohttp.ClientTimeout(total=30),
-            )
-            async with duck_chat.DuckChat(session=session) as chat:
-                await context.send(await chat.ask_question(" ".join(query)))
+                items = data.get("items", [])
+                if len(items) == 0:
+                    await context.send("No Steam games found for that query.")
+                    return
+
+                game_id = items[0]["id"]
+                game_name = items[0]["name"]
+
+                async with session.get(
+                    f"https://www.protondb.com/api/v1/reports/summaries/{game_id}.json"
+                ) as resp:
+                    rating_data = await resp.json()
+
+                tier = rating_data.get("tier", "unknown")
+                confidence = rating_data.get("confidence", "unknown")
+                total = rating_data.get("total", 0)
+
+                await context.send(
+                    f"{game_name}: **{tier.capitalize()}** "
+                    f"(confidence: {confidence}, {total} reports)"
+                )
         except Exception as e:
-            await context.author.send("Could not query AI chat: " + repr(e))
+            await context.author.send("Could not query ProtonDB: " + repr(e))
 
     @bot.command(name="gem", help="query gemini 1.5 flash")
     async def gemini(context, *query):
