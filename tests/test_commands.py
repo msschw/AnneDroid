@@ -242,14 +242,14 @@ except ImportError:
     reason="requires GEMINI_API_KEY and google-genai",
 )
 def _gemini_request(contents):
-    """Call Gemini, skipping on transient server errors."""
+    """Call Gemini, skipping on transient or rate-limit errors."""
     import google.genai.errors as _ge
     try:
         client = genai.Client(api_key=GEMINI_API_KEY)
         return client.models.generate_content(
-            model="gemini-2.5-flash", contents=contents
+            model="gemini-2.0-flash", contents=contents
         )
-    except _ge.ServerError as e:
+    except (_ge.ServerError, _ge.ClientError) as e:
         pytest.skip(f"Gemini API transient error: {e}")
 
 
@@ -309,6 +309,37 @@ class TestGroqCommand:
             ],
         )
         text = response.choices[0].message.content
+        chunks = [text[i : i + 2000] for i in range(0, len(text), 2000)]
+        assert len(chunks) >= 1
+        assert all(len(c) <= 2000 for c in chunks)
+        assert "".join(chunks) == text
+
+
+# ---------------------------------------------------------------------------
+# !gpt – text.pollinations.ai (free, no auth)
+# ---------------------------------------------------------------------------
+class TestGptCommand:
+    @pytest.mark.asyncio
+    async def test_gpt_returns_response(self):
+        import aiohttp
+        prompt = "Say hello in one word"
+        url = f"https://text.pollinations.ai/{urllib.parse.quote(prompt)}"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                assert resp.status == 200
+                text = await resp.text()
+        assert text
+        assert len(text) > 0
+
+    @pytest.mark.asyncio
+    async def test_gpt_chunks_long_responses(self):
+        import aiohttp
+        prompt = "Write a paragraph about Python programming"
+        url = f"https://text.pollinations.ai/{urllib.parse.quote(prompt)}"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                assert resp.status == 200
+                text = await resp.text()
         chunks = [text[i : i + 2000] for i in range(0, len(text), 2000)]
         assert len(chunks) >= 1
         assert all(len(c) <= 2000 for c in chunks)

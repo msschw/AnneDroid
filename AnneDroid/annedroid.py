@@ -300,19 +300,40 @@ def main():
                 "Could not query Metacritic: " + repr(e)
             )
 
-    @bot.command(name="gem", help="query gemini 1.5 flash")
+    @bot.command(name="gem", help="query gemini 2.0 flash (free tier)")
     async def gemini(context, *query):
         api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            await context.author.send("GEMINI_API_KEY not set.")
+            return
         try:
             client = genai.Client(api_key=api_key)
             response = client.models.generate_content(
-                model='gemini-2.5-flash', contents=" ".join(query)
+                model='gemini-2.0-flash', contents=" ".join(query)
             )
             chunks = [response.text[i:i + 2000] for i in range(0, len(response.text), 2000)]
             for chunk in chunks:
                 await context.send(chunk)
         except Exception as e:
             await context.author.send("Could not query Gemini: " + repr(e))
+
+    @bot.command(name="gpt", help="query GPT-4 via text.pollinations.ai (free)")
+    async def gpt(context, *query):
+        try:
+            prompt = " ".join(query)
+            url = f"https://text.pollinations.ai/{urllib.parse.quote(prompt)}"
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as resp:
+                    if resp.status != 200:
+                        text = await resp.text()
+                        await context.send(f"Could not query GPT: {text[:200]}")
+                        return
+                    text = await resp.text()
+            chunks = [text[i:i + 2000] for i in range(0, len(text), 2000)]
+            for chunk in chunks:
+                await context.send(chunk)
+        except Exception as e:
+            await context.author.send("Could not query GPT: " + repr(e))
 
     @bot.command(name="groq", help="query llama 3.3 via groq")
     async def groq(context, *query):
@@ -330,24 +351,13 @@ def main():
         except Exception as e:
             await context.author.send("Could not query Groq: " + repr(e))
 
-    @bot.command(name="hug", help="generate an image from a text prompt via HuggingFace")
+    @bot.command(name="hug", help="generate an image from a text prompt via Pollinations.ai")
     async def hug(context, *query):
-        api_key = os.getenv("HF_API_KEY")
-        if not api_key:
-            await context.author.send("HF_API_KEY not set.")
-            return
         try:
             prompt = " ".join(query)
-            headers = {
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            }
-            body = {"inputs": prompt}
-            async with aiohttp.ClientSession(headers=headers) as session:
-                async with session.post(
-                    "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell",
-                    json=body,
-                ) as resp:
+            url = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(prompt)}?model=flux&nologo=true"
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as resp:
                     if resp.status != 200:
                         text = await resp.text()
                         await context.send(f"Could not generate image: {text[:200]}")
@@ -356,6 +366,74 @@ def main():
             await context.send(file=discord.File(fp=io.BytesIO(data), filename="hug.png"))
         except Exception as e:
             await context.author.send("Could not generate image: " + repr(e))
+
+    @bot.command(name="song", help="generate music from a text description via AI Music API")
+    async def song(context, *query):
+        api_key = os.getenv("AIMUSIC_API_KEY")
+        if not api_key:
+            await context.author.send("AIMUSIC_API_KEY not set.")
+            return
+        try:
+            prompt = " ".join(query)
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+                "Accept-Encoding": "identity",
+            }
+            body = {
+                "custom_mode": False,
+                "mv": "sonic-v4-5",
+                "title": prompt[:50],
+                "tags": "ai generated",
+                "gpt_description_prompt": prompt,
+            }
+            async with context.typing():
+                async with aiohttp.ClientSession(headers=headers) as session:
+                    async with session.post(
+                        "https://api.aimusicapi.ai/api/v1/sonic/create",
+                        json=body,
+                    ) as resp:
+                        if resp.status != 200:
+                            text = await resp.text()
+                            await context.send(f"Could not create music: {text[:200]}")
+                            return
+                        result = await resp.json()
+
+                    task_id = result.get("task_id")
+                    if not task_id:
+                        await context.send("No task ID returned.")
+                        return
+
+                    for _ in range(60):
+                        await asyncio.sleep(5)
+                        async with session.get(
+                            f"https://api.aimusicapi.ai/api/v1/sonic/task/{task_id}"
+                        ) as poll_resp:
+                            if poll_resp.status != 200:
+                                continue
+                            poll = await poll_resp.json()
+                            if poll.get("type") == "not_ready":
+                                continue
+                            clips = poll.get("data", [])
+                            if not isinstance(clips, list):
+                                continue
+                            for clip in clips:
+                                if clip.get("state") == "succeeded":
+                                    audio_url = clip.get("audio_url", "")
+                                    if audio_url:
+                                        async with session.get(audio_url) as audio_resp:
+                                            audio_data = await audio_resp.read()
+                                        await context.send(
+                                            file=discord.File(fp=io.BytesIO(audio_data), filename="song.mp3")
+                                        )
+                                        return
+                            if any(c.get("state") == "failed" for c in clips):
+                                await context.send("Music generation failed.")
+                                return
+
+                    await context.send("Music generation timed out.")
+        except Exception as e:
+            await context.author.send("Could not generate music: " + repr(e))
 
     async def set_idle_state(message=None):
         name = message if message else "with herself"
