@@ -9,7 +9,7 @@ youtube-search
 nltk
 numpy
 HanTa
-IMDbPY
+cinemagoer>=2026.6.27
 matplotlib
 pandas
 wolframalpha

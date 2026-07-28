@@ -300,56 +300,89 @@ def main():
                 "Could not query Metacritic: " + repr(e)
             )
 
-    @bot.command(name="gem", help="query gemini 2.0 flash (free tier)")
-    async def gemini(context, *query):
+    async def _query_pollinations(prompt):
+        url = f"https://text.pollinations.ai/{urllib.parse.quote(prompt)}?model=openai-fast"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, timeout=60) as resp:
+                if resp.status not in (200, 402, 429):
+                    return None
+                if resp.status != 200:
+                    return None
+                return await resp.text()
+
+    async def _query_gemini(prompt):
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
-            await context.author.send("GEMINI_API_KEY not set.")
-            return
+            return None
         try:
             client = genai.Client(api_key=api_key)
             response = client.models.generate_content(
-                model='gemini-2.0-flash', contents=" ".join(query)
+                model='gemini-2.5-flash', contents=prompt
             )
-            chunks = [response.text[i:i + 2000] for i in range(0, len(response.text), 2000)]
-            for chunk in chunks:
-                await context.send(chunk)
-        except Exception as e:
-            await context.author.send("Could not query Gemini: " + repr(e))
+            return response.text
+        except Exception:
+            return None
 
-    @bot.command(name="gpt", help="query GPT-4 via text.pollinations.ai (free)")
-    async def gpt(context, *query):
-        try:
-            prompt = " ".join(query)
-            url = f"https://text.pollinations.ai/{urllib.parse.quote(prompt)}"
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url) as resp:
-                    if resp.status != 200:
-                        text = await resp.text()
-                        await context.send(f"Could not query GPT: {text[:200]}")
-                        return
-                    text = await resp.text()
-            chunks = [text[i:i + 2000] for i in range(0, len(text), 2000)]
-            for chunk in chunks:
-                await context.send(chunk)
-        except Exception as e:
-            await context.author.send("Could not query GPT: " + repr(e))
-
-    @bot.command(name="groq", help="query llama 3.3 via groq")
-    async def groq(context, *query):
+    async def _query_groq(prompt):
         api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            return None
         try:
             client = AsyncGroq(api_key=api_key)
             response = await client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
-                messages=[{"role": "user", "content": " ".join(query)}],
+                messages=[{"role": "user", "content": prompt}],
             )
-            text = response.choices[0].message.content
-            chunks = [text[i:i + 2000] for i in range(0, len(text), 2000)]
-            for chunk in chunks:
-                await context.send(chunk)
-        except Exception as e:
-            await context.author.send("Could not query Groq: " + repr(e))
+            return response.choices[0].message.content
+        except Exception:
+            return None
+
+    async def _send_chunks(context, text):
+        chunks = [text[i:i + 2000] for i in range(0, len(text), 2000)]
+        for chunk in chunks:
+            await context.send(chunk)
+
+    @bot.command(name="gem", help="query Gemini 2.5 Flash (falls back to groq)")
+    async def gemini(context, *query):
+        prompt = " ".join(query)
+        text = await _query_gemini(prompt)
+        if text is not None:
+            await _send_chunks(context, text)
+            return
+        await context.send("*Gem unavailable, falling back to Groq...*")
+        text = await _query_groq(prompt)
+        if text is not None:
+            await _send_chunks(context, text)
+            return
+        await context.send("All AI backends are currently unavailable.")
+
+    @bot.command(name="gpt", help="query GPT-OSS (falls back to gem → groq)")
+    async def gpt(context, *query):
+        prompt = " ".join(query)
+        text = await _query_pollinations(prompt)
+        if text is not None:
+            await _send_chunks(context, text)
+            return
+        await context.send("*GPT free tier unavailable, falling back to Gem...*")
+        text = await _query_gemini(prompt)
+        if text is not None:
+            await _send_chunks(context, text)
+            return
+        await context.send("*Gem unavailable, falling back to Groq...*")
+        text = await _query_groq(prompt)
+        if text is not None:
+            await _send_chunks(context, text)
+            return
+        await context.send("All AI backends are currently unavailable.")
+
+    @bot.command(name="groq", help="query llama 3.3 via groq")
+    async def groq(context, *query):
+        prompt = " ".join(query)
+        text = await _query_groq(prompt)
+        if text is None:
+            await context.author.send("Could not query Groq.")
+            return
+        await _send_chunks(context, text)
 
     @bot.command(name="hug", help="generate an image from a text prompt via Pollinations.ai")
     async def hug(context, *query):
